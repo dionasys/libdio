@@ -11,24 +11,35 @@ Coordinator.algos={}
 -- For each algoId in confObj
 --end
 
-Coordinator.addProtocol=function(algo_obj)
+Coordinator.addProtocol=function(algo_id, algo_obj)
    
-   local id = #Coordinator.algos+1
-   algo_obj:setAlgoID(id)   -- note: this method must be implemented by all protocols
-   log:print("creating protocol id: "..id)
-   Coordinator.algos[id]=algo_obj
+   local algo_seq = #Coordinator.algos+1
    
-   
-   log:print("----------- Current Protocols -----------------------")
-   for i, algo in pairs(Coordinator.algos) do
-      log:print(i, algo)
-   end
-  log:print("----------------------------------")
+   algo_obj:setAlgoID(algo_id)   -- note: this method must be implemented by all protocols
+   log:print("COORDINATOR [addPROTOCOL] - at node: "..job.position.. " adding PROTOCOL seq: "..algo_seq.." id: "..algo_id.." table: "..tostring(algo_obj).." table set id:"..algo_obj:getAlgoID())
+   local algo ={}
+   algo.id=algo_id
+   algo.obj=algo_obj
+   Coordinator.algos[algo_seq]=algo
 
+   
+end
+
+
+Coordinator.showProtocols=function()
+    -- only for debud 
+   log:print("-------Current added Protocols----------")
+   for k,v in pairs(Coordinator.algos) do 
+   	log:print(k, v.id, v.obj) 
+   end
+   log:print("---------------------------------------")
+   
+   
 end
 
 
 Coordinator.launch=function(running_time, delay)
+	
 	-- set termination thread
 	events.thread(function() events.sleep(running_time) os.exit() end)
 	-- TEST: init random number generator , removed for test: (initial view seems to be the same) 
@@ -37,45 +48,63 @@ Coordinator.launch=function(running_time, delay)
 	local desync_wait=nil
 	-- test: wait for other nodes to start 
 	events.sleep(2)
-			
-	for i, algo in pairs(Coordinator.algos) do
 	
-		log:print("COORDINATOR [launch] - Protocol CLASS: "..algo:getProtocolClassName().." Protocol ID: "..i.." at node:"..job.position)
-	  bootView=Coordinator.bootstrap(algo:getViewSize())
-	  algo:init(bootView)
- 	  desync_wait=(algo:getCyclePeriod() * math.random())
+	-- init each added protocol	
+	--for k,v in pairs(Coordinator.algos) do log:print(k, v.id, v.obj) end	
+	for k, algo in pairs(Coordinator.algos) do
+		log:print("COORDINATOR [launch] - ALGO CLASS: "..algo.obj:getProtocolClassName().." ALGO Seq: "..k.." ALGO ID: "..algo.id.." ALGO OBJ: "..tostring(algo.obj).." at node:"..job.position)
+	  bootView=Coordinator.bootstrap(algo.obj:getViewSize())
+	  algo.obj:init(bootView)
+ 	  desync_wait=(algo.obj:getCyclePeriod() * math.random())
     log:print("[Coordinator.launch()] at node: "..job.position.." desync_wait: "..desync_wait)
  	  events.sleep(desync_wait)
-	  events.periodic(algo:getCyclePeriod(), Coordinator.doActive)
+	  events.periodic(algo.obj:getCyclePeriod(), Coordinator.doActive)
 	  log:print("[Coordinator.launch()] at node: "..job.position.." delay to next protocol: "..desync_wait)
     events.sleep(delay)
-	
 	end
 
 end
 
 Coordinator.doActive=function()
+  
   local algo=nil
-  for key in pairs(Coordinator.algos) do
-    algo=Coordinator.algos[key]
-    if algo~=nil then
-    	log:print("[Coordinator.doActive] - COORDINATOR ACTIVE THREAD at node: "..job.position.." for protocol: "..key)
-    	algo:active_thread()
+  for k, algo in pairs(Coordinator.algos) do
+    --algo=Coordinator.algos[k]
+    if algo.obj~=nil then
+    	log:print("[Coordinator.doActive] - COORDINATOR ACTIVE THREAD at node: "..job.position.." for ALGO Seq: "..k.." ALGO id: "..algo.id.." ALGO OBJ: "..tostring(algo.obj))
+    	algo.obj:active_thread()
     else
-    	log:print("[Coordinator.doActive] - Protocol (algo): "..key.." is not instantiated")
+    	log:print("[Coordinator.doActive] - ALGO Seq: "..k.." is not instantiated")
     end
   end
+
 end
 
 Coordinator.send=function(algoId, dst, buf)
-		local algo=Coordinator.algos[algoId]
-	  --log:print("Cycle / 2 "..algo.cycle_period)
+
+		local algo = nil
+	  for k,v in pairs(Coordinator.algos) do 
+   	    if v.id==algoId then
+   	  		 algo = v.obj
+   	    end
+    end
+		--local algo=Coordinator.algos[algoId]
+
+	  log:print("Cycle / 2 "..algo.cycle_period)
 		local ok, r = rpc.acall(dst,{"Coordinator.passive_thread", algoId, job.position, buf}, algo.cycle_period/2)
 		return ok, r
 end
 
 Coordinator.passive_thread=function(algoId, from, buffer)
-		local algo=Coordinator.algos[algoId]
+
+		local algo = nil
+	  for k,v in pairs(Coordinator.algos) do 
+   	    if v.id==algoId then
+   	  		 algo = v.obj
+   	    end
+    end
+		--local algo=Coordinator.algos[algoId]
+		
 		log:print("[Coordinator.passive] - COORDINATOR PASSIVE THREAD at node: "..job.position.." received from sender id: "..from.." protocol: "..algoId)
 		local ret = algo:passive_thread(from, buffer)
 		--log:print("buffer size: "..#buffer)
@@ -100,7 +129,6 @@ Coordinator.bootstrap=function(c)
 	table.remove(indexes,job.position) 
 	
 	local selected_indexes = misc.random_pick(indexes,math.min(c, #indexes))
-	
 	
 	local result = ""
 	for i=1,#selected_indexes do
@@ -733,15 +761,13 @@ end
 				--local hashed_index = compute_hash(tostring(a_peer.ip) ..":"..tostring(a_peer.port))
 				local hashed_index = v
 				
-				log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." - invoking  self.getRemotePayload(..self..,.."..tostring(a_peer.ip)..")")
-				
-				if(a_peer==nil) then
-        log:print(currentMethod.." at node: "..job.position.." a_peer nill" )
-    		else
-            log:print(currentMethod.." at node: "..job.position.." a_peer not nill" )
-   			end
-				
-				local payload = self.getRemotePayload(self, a_peer)
+				--log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." - invoking  self.getRemotePayload(..self..,.."..tostring(a_peer.ip)..")")
+				--if(a_peer==nil) then
+        -- log:print(currentMethod.." at node: "..job.position.." a_peer nill" )
+    		--else
+        -- log:print(currentMethod.." at node: "..job.position.." a_peer not nill" )
+   			--end
+				--local payload = self.getRemotePayload(self, a_peer)
 		
 		 		--self.view[#self.view+1] = {peer=a_peer,age=math.random(self.c),id=hashed_index , payload={}}  -- aqui added payload
 		 		self.view[#self.view+1] = {peer=a_peer,age=0,id=hashed_index , payload={}}  --
@@ -760,7 +786,7 @@ end
 ------------------------------------------------------------------------
 function PSS.getRemotePayload(self, dst)
 
-
+	  -- this method may be useless - check used to test the bootstrap but may be remove later.
     local currentMethod = "[PSS.INIT.GETREMOTEPAYLOAD] - "
     local received_payload = {}
     
@@ -768,12 +794,9 @@ function PSS.getRemotePayload(self, dst)
     else
          log:print(currentMethod.." at node: "..job.position.." DST NOT NILL" )
     end
-    
     log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." trying to update data from node id: "..tostring(dst.ip)) 
                  
-            
 		local ok, r = rpc.acall(dst,{tostring(self.algoId..".getLocalPayload"), me})
-		
 		if ok then
 				log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." received [ok==true] from REMOTE node: "..tostring(dst.ip))
 			
@@ -787,25 +810,15 @@ function PSS.getRemotePayload(self, dst)
 		else
 			  log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." received [ok==false] from REMOTE node: "..tostring(dst.ip))	 
 		end
-		
-		
-		
 		return received_payload
 end	
-
-
+------------------------------------------------------------------------
 function PSS.getLocalPayload(self, from)
-
+ 	  -- this method may be useless - check used to test the bootstrap but may be remove later. 
     local currentMethod = "[PSS.GETPAYLOAD] - "
     log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." invoked from: "..tostring(from.id))
 		return self.me.payload
-
 end
-	
-	
-	
-
-	
 ------------------------------------------------------------------------
 function PSS.get_id(self)
   return self.me.id
@@ -865,7 +878,7 @@ function TMAN.setAlgoID(self, algoId)
 	self.algoId = algoId
 end
 
-function TMAN.getAlgoID(seld)
+function TMAN.getAlgoID(self)
   return self.algoId
 end
 ----------------------------------------------------
@@ -889,7 +902,16 @@ end
 		local currentMethod = "[TMAN.INIT] - "
 		log:print(currentMethod.." at node: "..job.position.." id : "..self.me.id.." cycle: "..self.cycle_numb.." STARTED")
 		
-		local active_algo_base = self.b_protocol[self.b_active]
+		-- look for active algo 
+		local active_algo_base = nil
+		for k,v in pairs(self.b_protocol) do
+		    --log:print(k,tostring(v))
+				if v:getAlgoID()==self.b_active then
+				   active_algo_base = v
+				end
+		end
+		log:print(currentMethod.." at node: "..job.position.." active base protocol id: "..self.b_active.." is :"..tostring(active_algo_base))
+		--local active_algo_base = self.b_protocol[self.b_active]
 		
 		local peer = nil
 		for i = 1, self.s do 
@@ -910,8 +932,19 @@ end
 	
 ----------------------------------------------------
 	function TMAN.select_view_to_send(self, selected_peer)
+		local currentMethod = "[TMAN.SELECT_VIEW_TO_SEND] - "
 		
-	  local active_algo = self.b_protocol[self.b_active]
+	  -- look for active algo 
+		local active_algo = nil
+		for k,v in pairs(self.b_protocol) do
+		    --log:print(k,tostring(v))
+				if v:getAlgoID()==self.b_active then
+				   active_algo = v
+				end
+		end
+		log:print(currentMethod.." at node: "..job.position.." active base protocol id: "..self.b_active.." is :"..tostring(active_algo_base))
+		--local active_algo = self.b_protocol[self.b_active]
+	  
 		-- make a copy of the PSS
 		local buffer = active_algo:getViewCopy()
 		-- merges tman and pss view
@@ -1404,7 +1437,8 @@ function main()
 	me.id=job.position
 	me.payload={}
 	me.age=0
-
+	 
+	
 	-- first version: (due to the fact of using strings as index in the Coordinator.algos table. NOTE: It does not allow to guarantee the order in which the protocols are going to be started.)
 	--local pss = PSS.new(10, 1, 3, 5, 4, "rand", me, "pss1")   -- parameters: c (view size) , h (healing), s (swappig), fanout,cyclePeriod, selection, me, algoId
 	--tman_base_protocol.pss1=pss    --Link with PSS
@@ -1417,13 +1451,14 @@ function main()
 	
   -- updating to: 
   local pss = PSS.new(10, 1, 3, 5, 5, "rand", me)   -- parameters: c (view size) , h (healing), s (swappig), fanout,cyclePeriod, selection, me, algoId
-  Coordinator.addProtocol(pss)
-  local active_pss_id = pss:getAlgoID()
+  Coordinator.addProtocol("pss1", pss)
+  
   
   local tman_base_protocols={pss}
-  local tman = TMAN.new(me, 6, 5, tman_base_protocols, active_pss_id)   -- parameters: me, view size, cycle_period, base_procotols, active_b_proto, algoId
-  --Coordinator.addProtocol(tman)
-  
+
+  local tman = TMAN.new(me, 6, 5, tman_base_protocols, "pss1")   -- parameters: me, view size, cycle_period, base_procotols, active_b_proto, algoId
+  Coordinator.addProtocol("tman1", tman)
+  Coordinator.showProtocols()
   tman:set_distance_function(jaccard_distance)
   tman:set_node_representation(select_topics_according_to_id())
   
