@@ -28,11 +28,11 @@ end
 
 Coordinator.showProtocols=function()
     -- only for debud 
-   log:print("-------Current added Protocols----------")
+   log:print("#### Current added Protocols #######")
    for k,v in pairs(Coordinator.algos) do 
    	log:print(k, v.id, v.obj) 
    end
-   log:print("---------------------------------------")
+   log:print("####################################")
    
    
 end
@@ -47,7 +47,7 @@ Coordinator.launch=function(running_time, delay)
 	local bootView=nil
 	local desync_wait=nil
 	-- test: wait for other nodes to start 
-	events.sleep(2)
+	events.sleep(10)
 	
 	-- init each added protocol	
 	--for k,v in pairs(Coordinator.algos) do log:print(k, v.id, v.obj) end	
@@ -339,19 +339,38 @@ function PSS.getAlgoID(self) return self.algoId end
 ----------------------------------------------------
 function PSS.pss_selectPartner(self)
 		if #self.view > 0 then
+			
 			if self.SEL == "rand" then 
 				return math.random(#self.view) 
 			end
+			
 			if self.SEL == "tail" then
-				local ret_ind = -1 ; local ret_age = -1
+				local tail_ind = -1
+				local biggerAge = -1
+				
 				for i,p in pairs(self.view) do
-					if (p.age > ret_age) then 
-						ret_ind = i;ret_age=p.age
+					if (p.age > biggerAge) then 
+						biggerAge=p.age
+						tail_ind = i
 					end
 				end
-				assert (not (ret_ind == -1))
-				return ret_ind
+				assert (not (tail_ind == -1))
+				return tail_ind
 			end
+			
+			if self.SEL == "head" then
+         local smallAge = 999
+         local head_ind = -1
+         for i, p in pairs(self.view) do
+	         if p.age < smallAge then
+	            smallAge = p.age
+	            head_ind = i
+	         end
+	       end
+         assert (not (head_ind == -1))
+         return head_ind
+      end
+			
 		else
 			return false
 		end
@@ -491,6 +510,7 @@ function PSS.pss_selectToSend(self, t_type)
 		-- table.remove(self.view,self.me.id)
 		-- try with this new funciion
 		self.remove_all_instances_of_me(self.view, self.me.id)
+		
 		if self.logDebug then
     	self.utils:print_this_view(currentMethod.."PSS: merged VIEW after [removed instances of me] at SELECTTOKEEP ", self.view, self.cycle_numb, self.algoId)
 		end
@@ -688,9 +708,15 @@ end
 	  -- select to keep
 		self.pss_selectToKeep(self,buffer, "PASSIVE_THREAD")
 		
-		-- increase ages
+
+		-- increase the age of all nodes in the view
+		for _,v in ipairs(self.view) do
+				v.age = v.age+1
+		end
+		
+		self.utils:print_this_view(currentMethod.." CURRENT PSS_VIEW after ALL PSS PASSIVE THREAD: ", self.view, self.cycle_numb, self.algoId)
 		if self.logDebug then
-			self.utils:print_this_view(currentMethod.." CURRENT PSS_VIEW after ALL PSS PASSIVE THREAD: ", self.view, self.cycle_numb, self.algoId)
+			
 			log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." [PSS.PASSIVE_THREAD] - END")
 		end
 		
@@ -753,13 +779,13 @@ end
 
 			if ok then
 				if self.logDebug then
-				log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." received [ok==true] from REMOTE node: "..partner.id)
+				log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." received - ok==true - from REMOTE node: "..partner.id)
 				end
 				local received = r[1]
 				if received==false then
 				  local w_delay = math.random()
 				  if self.logDebug then
-  				log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." - received [false] from REMOTE node: "..partner.id.." wating "..w_delay.." to retry again." )
+  				log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." - received - false from REMOTE node: "..partner.id.." wating "..w_delay.." to retry again." )
   				end
 					events.sleep(w_delay)	
 					
@@ -767,7 +793,7 @@ end
 					--exchange_aborted=false 
 					retry=false
 					if self.logDebug then
-					log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." - received [buffer] from REMOTE node: "..partner.id.." invoking SELECTTOKEEP().")
+					log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." - received buffer from REMOTE node: "..partner.id.." invoking SELECTTOKEEP().")
 					end
 					self.pss_selectToKeep(self, received, "ACTIVE_THREAD")
 	
@@ -804,17 +830,18 @@ end
 		self.view_copy = misc.dup(self.view)
 		self.view_copy_lock:unlock()
 
-		-- increase the age of all nodes in the view
+		
 		if self.logDebug then
-		log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." - increasing the age of all nodes in PSS_VIEW")
+			log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." - increasing the age of all nodes in PSS_VIEW")
 		end
+		-- increase the age of all nodes in the view
 		for _,v in ipairs(self.view) do
 				v.age = v.age+1
 		end
 
-	  -- debug: remove this print later		
+	  -- debug: 	
 	  if self.logDebug then
-    self.utils:print_this_view(currentMethod.."CURRENT PSS_VIEW: ", self.view, self.cycle_numb, self.algoId)	
+    	self.utils:print_this_view(currentMethod.."CURRENT PSS_VIEW: ", self.view, self.cycle_numb, self.algoId)	
 		end
 		------------------------------------------------------------------------------------	
 		-- CONVERGENCE: adds IDs of known nodes to a global set/table called all_known_nodes
@@ -823,13 +850,14 @@ end
 		end
 		
 		--print view check information
-		if self.logDebug then
+		--if self.logDebug then
 			log:print("[PSS.active_thread] - PSS_VIEW CONVERGENCE at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." all_known_nodes size: "..#self.all_known_nodes)
-		end
+		--end
 		------------------------------------------------------------------------------------
 		
     -- print view	
     self.utils:print_this_view(currentMethod.."CURRENT PSS_VIEW: ", self.view, self.cycle_numb, self.algoId)	
+	
 		if self.logDebug then
 		log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." [PSS.ACTIVE_THREAD] - END")
     end
@@ -931,7 +959,7 @@ function PSS.getRemotePayload(self, dst)
                  
 		local ok, r = rpc.acall(dst,{tostring(self.algoId..".getLocalPayload"), me})
 		if ok then
-				log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." received [ok==true] from REMOTE node: "..tostring(dst.ip))
+				log:print(currentMethod.." at node: "..job.position.." at cycle: "..self.cycle_numb.." received - ok==true - from REMOTE node: "..tostring(dst.ip))
 			
 				local received_pl = r[1]
 				if received_pl==false then
@@ -984,6 +1012,7 @@ function TMAN.new(me, size, cycle_period, base_procotols, active_b_proto)
 	self.is_init = false
 	self.cycle_numb = 0
 	self.rank_func = nil
+	self.rank_extra_params={}
 	
   self.me=me	
 	self.s = size
@@ -1004,9 +1033,14 @@ end
 ----------------------------------------------------
 
 function TMAN.getViewSize(self) return self.s end
+
 function TMAN.getCyclePeriod(self) return self.cycle_period end
+
 function TMAN.getProtocolClassName(self) return self.protoName end
-function TMAN.setLog(self, flag) self.logDebug = flag end
+
+function TMAN.setLog(self, flag) 
+	self.logDebug = flag 
+end
 
 function TMAN.setAlgoID(self, algoId)
 	self.algoId = algoId
@@ -1238,9 +1272,60 @@ end
 		self.rank_func = f
 	end
 ----------------------------------------------------
+	function TMAN.set_distance_function(self, f, args)
+	 	self.rank_extra_params = args
+		self.rank_func = f
+	end
+	
+----------------------------------------------------
+	function TMAN.set_distFunc_extraParams(self, args)
+	
+	  if self==nil then
+	    log:print("at node: "..job.position.." 3 self nill")
+	  else
+	   log:print("at node: "..job.position.." 3 self notl nill")
+	    log:print("at node: "..job.position.." self "..tostring(self))
+	  end
+	  
+	 	self.rank_extra_params = args
+	  log:print("aux setting rank extra param: "..self.rank_extra_params[1])
+	end
+----------------------------------------------------
+	function TMAN.get_distFunc_extraParams(self)
+	
+	  if self==nil then
+	    log:print("at node: "..job.position.." 2 self nill")
+	  else
+	    log:print("at node: "..job.position.." 2 self notl nill:  "..tostring(self))
+
+	  end
+	 
+	 
+	  
+	  if self.rank_extra_params==nil then
+	    log:print("at node: "..job.position.." self .rank_extra_params nill")
+	  else
+	    log:print("at node: "..job.position.." self .rank_extra_params not nill self: "..tostring(self))
+	  end
+	   
+
+	   for k,v in pairs(self.rank_extra_params) do
+	       log:print("at node: "..job.position.." self  k,v : "..k..", "..v)
+	   end
+	   
+	   
+	 	return self.rank_extra_params 
+	end
+----------------------------------------------------
 	function TMAN.dist_function(self, p1, p2)
+	
+	  if self==nil then
+	    log:print("at node: "..job.position.." 7 self dist_function nil: ")
+	  else
+	   log:print("at node: "..job.position.." 7 self dist_function not nil: "..tostring(self))
+	  end
 		
-		dist = self.rank_func(p1, p2)
+		dist = self.rank_func(self, p1, p2)
 		return dist
 		
 	end
@@ -1279,6 +1364,12 @@ end
 			
 				
 			--local dist = self.dist_function(self, self.get_payload(self, self.me), self.get_payload(self, v))
+			 if self==nil then
+	     	log:print("at node: "..job.position.." 4 self dist_function nill: ")
+	     else
+	     	log:print("at node: "..job.position.." 4 self dist_function not nill: "..tostring(self))
+	     end
+	    
 			local dist = self.dist_function(self, mypayload, nb_payload)
 			
 			if self.logDebug then
@@ -1345,17 +1436,17 @@ end
 	end
 ----------------------------------------------------
 	function TMAN.remove_node(self, t, node)
-   	log:print("remove node : "..node)
+   	--log:print("remove node : "..node)
  
  		
 			--TODO refactoring: send it to Utilities maybe	
 		local j = 1
 		for i = 1, #t do
 		  
-		  log:print("t[j] node : "..t[j].id)
+		  --log:print("t[j] node : "..t[j].id)
 			--if self.same_node(self, t[j], node) then
 			if  t[j].id==node then  
-			  log:print("same node")
+			  --log:print("same node")
 				table.remove(t, j)
 			else j = j+1 
 			end
@@ -1366,8 +1457,8 @@ end
 ----------------------------------------------------
 	function TMAN.same_node(self, n1,n2)
 		--TODO refactoring: send it to Utilities maybe
-		log:print("n1. id: "..n1.id)
-		log:print("n2. peer: "..n2.id)
+		--log:print("n1. id: "..n1.id)
+		--log:print("n2. peer: "..n2.id)
 		
 		local peer_first
 		if n1.peer then 
@@ -1512,8 +1603,9 @@ end
 		local buffer_to_send = self.select_view_to_send(self, sender)
 		self.update_view_to_keep(self, received)
 		
+		
+		self.utils:print_this_view(currentMethod.."CURRENT TMAN_VIEW:", self.t_view, self.cycle_numb, self.algoId)
 		if self.logDebug then
-			self.utils:print_this_view(currentMethod.."CURRENT TMAN_VIEW:", self.t_view, self.cycle_numb, self.algoId)
 			log:print(currentMethod.." at node: "..self.me.id.." at cycle: "..self.cycle_numb.." [TMAN.ACTIVE_THREAD] - END")
 		end
 		
@@ -1541,12 +1633,66 @@ end
 ----------------------------------------------------
 --BEGIN global functions
 --TODO Consider in another class
-function jaccard_distance(a, b)
+function id_based_ring_distance(self, a, b)
+-- a and b correspond to the data payload of each node 
+   
+   -- get extra parameters need to calculate the dist function, these paremeters must be initialized with TMAN.set_distFunc_extraParams() method. 
+ 	 -- in this case the extra parameter will contain the auxiliar 'm' value used to calculate the distance in the ring, e.g., 2^m nodes 
+ 	 		if self==nil then
+	     	log:print("at node: "..job.position.." jaccard self dist_function nill: ")
+	     else
+	     	log:print("at node: "..job.position.." jaccard self dist_function not nill: "..tostring(self))
+	     end
+ 	 
+ 	    
+ 	    if a[1]==nil or b[1]==nil then
+ 	      log:print("at node: "..job.position.." self either a[1]==nil or b[1]==nil")
+ 	      return 1
+ 	    end
+ 	 
+ 	    local aux_parameters = self:get_distFunc_extraParams()
+ 		  
+	    for k,v in pairs(a) do
+	       log:print("at node: "..job.position.." self a k,v : "..k..", "..v)
+	   	end
+	   	log:print("at node: "..job.position.." self a[1]: "..a[1])
+      for k,v in pairs(b) do
+	       log:print("at node: "..job.position.." self b k,v : "..k..", "..v)
+	   	end
+	  	log:print("at node: "..job.position.." self b[1]: "..b[1])
+	    
+
+
+   		--local result = a[1] - b[1] 
+   		--local modope = math.pow(2,aux_parameters[1])
+   		--return math.mod(result,modope)
+   		
+   		local v1 = math.abs(a[1]-b[1])
+   		local v2 = math.pow(2, aux_parameters[1]) - v1   		
+   		local distance = math.min(v1, v2)
+   		
+   		 log:print("at node: "..job.position.." self a[1]: "..a[1].." b[1]"..b[1].." aux_parameters[1]"..aux_parameters[1].." distance: "..distance)
+   		
+   		return distance
+end
+
+
+
+function jaccard_distance(self, a, b)
+      
+      if self==nil then
+	     	log:print("at node: "..job.position.." jaccard self dist_function nill: ")
+	     else
+	     	log:print("at node: "..job.position.." jaccard self dist_function not nill: "..tostring(self))
+	     end
+	     
+	     
+-- a and b correspond to the data payload of each node 
 	--log:print("jaccard distance invoked")
 	--if type(a) == "table" and  type(v2) == "table" then
 		--log:print("a and b are tables ")
 		if #a==0 and #b==0 then  -- if sets are empty similarity is considered 1.
-			return 0
+			return 1
 		end
 		
 		local intersec = get_intersection(a,b)
@@ -1635,21 +1781,38 @@ function main()
 	 
 	local node = Node.new(job.me, job.position) 
 	
-  local pss = PSS.new(10, 1, 3, 5, 5, "rand", node)   -- parameters: c (view size) , h (healing), s (swappig), fanout,cyclePeriod, selection, me, algoId
+  local pss = PSS.new(10, 1, 3, 5, 5, "rand", node)   -- parameters: c (view size) , h (healing), s (swappig), fanout, cyclePeriod, peer_selection_policy , me
   Coordinator.addProtocol("pss1", pss)
   
   local tman_base_protocols={pss}
 
   local tman = TMAN.new(node, 6, 5, tman_base_protocols, "pss1")   -- parameters: me, view size, cycle_period, base_procotols, active_b_proto, algoId
+  
+  log:print("at node: "..job.position.." self tman: "..tostring(tman))
+ 
   Coordinator.addProtocol("tman1", tman)
   Coordinator.showProtocols()
-  tman:set_distance_function(jaccard_distance)
+
+  tman:set_distance_function(tman, jaccard_distance)
   tman:set_node_representation(select_topics_according_to_id())
   
+  
+  -- test second dist function
+ -- tman:set_distance_function(id_based_ring_distance)
+ -- local m = {}
+ -- m[1] = 7
+ -- tman:set_distFunc_extraParams(m)
+  
+ -- local rep={}
+ -- rep[1] = node:getID()
+ -- tman:set_node_representation(rep)
+  
+  -- set log 
   pss:setLog(true)
   tman:setLog(true)
   
-  Coordinator.launch(180, 15)  -- parameters: running time in seconds, delay to start each protocol
+  -- launch protocols
+  Coordinator.launch(600, 15)  -- parameters: running time in seconds, delay to start each protocol
   
 end
 
