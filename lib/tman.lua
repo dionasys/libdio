@@ -198,6 +198,7 @@ function PSS.getNodeID(self) return self.me:getID() end
 		if self.logDebug then
 			self.utils:print_this_view(currentMethod.." TMAN_VIEW_FROM_PSS: ", buffer, self.cycle_numb, self.algoId)
 		end
+		-- self.removeDead(buffer)
 		
 		-- merges tman and pss view
 		local merged =  misc.merge(self.t_view, buffer)
@@ -634,49 +635,6 @@ function PSS.getNodeID(self) return self.me:getID() end
 		end
 		
 		local buffer = self.select_view_to_send(self, selected_peer.id)
-		----------------------------------------------------------------
---		local try = 0
---		local trials = 3 
---		-- local status, reply = rpc.acall(selected_peer.peer, {'TMAN.t_passive_thread',buffer,me}) 
---		local status, reply = Coordinator.send(self.algoId, selected_peer, buffer)
---		while not status do
---			try = try + 1
---			if try <= trials then 
---			  retry_time = math.random(0.5, self.cycle_period * 0.5)
---			  if self.logDebug then
---					log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." try: "..try.. " got no response from: "..selected_peer.id.. " - "..tostring(reply).." => trying again in "..retry_time.." seconds")
---				end
---				events.sleep(retry_time)
---				
---				-- status, reply = rpc.acall(selected_peer.peer,{'TMAN.t_passive_thread',buffer,me})
---				status, reply = Coordinator.send(self.algoId, selected_peer, buffer)
---				
---			else
---				if self.logDebug then
---					log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." try: "..try.. " got no response from: "..selected_peer.id.. " - "..tostring(reply))
---				end
--- 			  log:warning(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." try: "..try.. " RPC error from PSS.passive_thread() function of REMOTE node: "..selected_peer.id.." => ", r)
---			  if try==3 then 
---			  		log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." after "..try.." failed retrials, removing " ..selected_peer.id.." from the view") 				
---					  table.remove(self.view,selected_peer)
---						break
---				end
---				
---			end
---		end	
---		
---		if status then
---			
---			local received = reply[1]
---			if received==false then
---					if self.logDebug then
---					log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." TMAN didnt receive a reply from remote node: "..selected_peer.id)
---					end
---			else
---				self.update_view_to_keep(self, received) 
---			end
---		end
-						----------------------------------------------------------------
 						
 		local retry = true
 		local exchange_retry=3
@@ -706,6 +664,7 @@ function PSS.getNodeID(self) return self.me:getID() end
 					if self.logDebug then
 						log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." - received buffer from REMOTE node: "..selected_peer.id.." invoking TMAN.UPDATE_VIEW_TO_KEEP().")
 					end
+					-- self.removeDead(received)
 					self.update_view_to_keep(self, received) 
 				end
 				
@@ -762,6 +721,7 @@ function PSS.getNodeID(self) return self.me:getID() end
 		end
 
 		local buffer_to_send = self.select_view_to_send(self, sender)
+		-- self.removeDead(received)
 		self.update_view_to_keep(self, received)
 		
 		
@@ -786,7 +746,19 @@ function PSS.getNodeID(self) return self.me:getID() end
 	 		log:print("TMAN - At node: node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." setting node representation (payload): [ "..pl_string.." ]")
 	 	end
 	end
-
+----------------------------------------------------
+	function TMAN.removeDead = function(received)
+			local ret = {}
+			for k,v in ipairs(received) do
+						local latency = rpc.ping(v.peer, 2)
+						if latency then
+							ret[#ret+1] = v
+						else 
+							table.remove(self.t_view, v)
+					end
+			end
+			return ret
+		end
 	
 
 ------------------------ END OF CLASS TMAN ----------------------------
