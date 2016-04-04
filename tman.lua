@@ -747,7 +747,7 @@ function PSS.getNodeID(self) return self.me:getID() end
 	 	end
 	end
 ----------------------------------------------------
-	function TMAN.removeDead = function(received)
+	function TMAN.removeDead(received)
 			local ret = {}
 			for k,v in ipairs(received) do
 						local latency = rpc.ping(v.peer, 2)
