@@ -567,6 +567,9 @@ end
 		self.view_copy_lock:lock()
 			self.view_copy = misc.dup(self.view)
 		self.view_copy_lock:unlock()
+	  if self.logDebug then
+    	self.utils:print_this_view(currentMethod.."COPY_VIEW_PSS: ", self.view_copy, self.cycle_numb, self.algoId)	
+		end
 
 		
 		if self.logDebug then
@@ -614,6 +617,8 @@ end
 
 	function PSS.getPeer(self)
 		
+		local currentMethod = "[PSS.GETPEER] - "
+		
 		self.view_copy_lock:lock()
 		local peer=nil
 		if #self.view_copy ~= 0 then 
@@ -622,16 +627,22 @@ end
 			end
 			peer = self.view_copy[math.random(#self.view_copy)] 
 			if self.logDebug then
-			log:print("[PSS.getPeer] - GET PEER RESU: "..peer.id)
+			log:print("[PSS.GETPEER] - GOT PEER: "..peer.id)
 			end
 		else
 			 if self.logDebug then
-			 	log:print("[PSS.getPeer] - VIEW COPY ZERO: ")
+			 	log:print("[PSS.GETPEER] - VIEW COPY size = ZERO: ")
 			 end
 		   peer = nil
 		end
+		
+	  if self.logDebug then
+    	self.utils:print_this_view(currentMethod.."VIEW_COPY_PSS: ", self.view_copy, self.cycle_numb, self.algoId)	
+		end
 	
 		self.view_copy_lock:unlock()
+		
+	  
 		
 		return peer
 		
@@ -640,7 +651,10 @@ end
 	
 	function PSS.getViewSnapshot(self)
 		
-		
+		local currentMethod = "[PSS.GETVIEWSNAPSHOT] - "
+	  if self.logDebug then
+    	self.utils:print_this_view(currentMethod.."VIEW_COPY_PSS: ", self.view_copy, self.cycle_numb, self.algoId)	
+		end
 		return self.view_copy
 		
 	end
@@ -648,7 +662,7 @@ end
 
 	function PSS.init(self, selected_indexes)
 	
-	local currentMethod = "[PSS.INIT] - STARTED"
+	local currentMethod = "[PSS.INIT]"
 	
 		--for i=1,#selected_indexes do
 		--	log:print("PSS INIT: at ("..job.position..") selected index: "..selected_indexes[i])
@@ -693,7 +707,12 @@ end
 		--table.sort(self.view,function(a,b) return a.id < b.id end)
 		self.view_copy_lock:lock()
 			self.view_copy = misc.dup(self.view)
+		  if self.logDebug then
+	    	self.utils:print_this_view(currentMethod.."COPY_VIEW_PSS: ", self.view_copy, self.cycle_numb, self.algoId)	
+			end
 		self.view_copy_lock:unlock()
+	 
+		
 		assert (#self.view == math.min(self.c,#selected_indexes))
 		
 		self.utils:print_this_view("[PSS.INIT] - VIEW_INITIALIZED:", self.view, self.cycle_numb, self.algoId)
