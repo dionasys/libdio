@@ -409,8 +409,8 @@ end
 
 	function PSS.passive_thread(self, from, buffer)
 	-- TODO maybe consider a queue for passive threads ? to received the requests. 
-		
-		self.view_lock:lock()
+	--test with locks
+		--self.view_lock:lock()
 		
 		local currentMethod = "[PSS.PASSIVE_THREAD] - "
 		if self.logDebug then
@@ -418,17 +418,15 @@ end
 		  self.utils:print_this_view(currentMethod.." CURRENT PSS_VIEW: ", self.view, self.cycle_numb, self.algoId)
 		end	
 		
-		-- check it
-		--aqui
 		if not self.is_init then
 			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." pss.is_init is false: ignoring request invoked from: "..from.." [PSS.PASSIVE_THREAD] - END")
 			return false
 		end
 		
-		--if self.ongoing_rpc then
-		--			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." self.ongoing_rpc is true: ignoring request invoked from: "..from.." [PSS.PASSIVE_THREAD] - END")
-		--			return false
-		--end
+		if self.ongoing_rpc then
+					log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." self.ongoing_rpc is true: ignoring request invoked from: "..from.." [PSS.PASSIVE_THREAD] - END")
+					return false
+	  end
 	  
 	  if self.logDebug then
 			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." - size of received VIEW (buffer): "..#buffer.." from "..from)
@@ -454,7 +452,8 @@ end
 		if self.logDebug then
 			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.PASSIVE_THREAD] - END")
 		end
-		self.view_lock:unlock()
+		
+		-- self.view_lock:unlock()
 		return ret
 	end
 ----------------------------------------------------
@@ -462,8 +461,9 @@ end
 ----------------------------------------------------
 	
 	function PSS.active_thread(self)	
-			
-	  self.view_lock:lock()
+		-- test with lock	
+	 -- self.view_lock:lock()
+	 self.ongoing_rpc=true
   	local currentMethod = "[PSS.ACTIVE_THREAD] - "
   	
   	if self.logDebug then
@@ -474,12 +474,12 @@ end
 
 		if not self.is_init then
 			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." PSS.IS_INIT is false: [PSS.ACTIVE_THREAD] - END")
-			self.view_lock:unlock()
+			--self.view_lock:unlock()
 			return false
 		end
 		
 
-		self.ongoing_rpc=true
+		
 
 		--local exchange_aborted=true
 		local retry = true
@@ -537,8 +537,9 @@ end
 				
 			else
 				if i==3 then 
-			  		log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." after "..exchange_retry.." failed retrials, removing " ..partner.id.." from the view") 				
-						table.remove(self.view,partner_ind)
+					log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." after "..exchange_retry.." failed retrials")
+			  		--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." after "..exchange_retry.." failed retrials, removing " ..partner.id.." from the view") 				
+						--table.remove(self.view,partner_ind)
 				else
 				  local w_delay = math.random(0.5, self.cycle_period * 0.5)
 				  if self.logDebug then
@@ -605,7 +606,7 @@ end
 		-- allow incoming passive threads
 		self.ongoing_rpc = false	
 		
-		self.view_lock:unlock()
+		--self.view_lock:unlock()
 			
 	end
 	

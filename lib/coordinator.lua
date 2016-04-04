@@ -31,9 +31,7 @@ Coordinator.showProtocols=function()
    
 end
 
-
 Coordinator.launch=function(running_time, delay)
-	
 	-- set termination thread
 	events.thread(function() events.sleep(running_time) os.exit() end)
 	-- TEST: init random number generator , removed for test: (initial view seems to be the same) 
@@ -42,7 +40,6 @@ Coordinator.launch=function(running_time, delay)
 	local desync_wait=nil
 	-- test: wait for other nodes to start 
 	events.sleep(10)
-	
 	-- init each added protocol	
 	--for k,v in pairs(Coordinator.algos) do log:print(k, v.id, v.obj) end	
 	for k, algo in pairs(Coordinator.algos) do
@@ -60,7 +57,6 @@ Coordinator.launch=function(running_time, delay)
 end
 
 Coordinator.doActive=function()
-  
   local algo=nil
   for k, algo in pairs(Coordinator.algos) do
     --algo=Coordinator.algos[k]
@@ -71,22 +67,6 @@ Coordinator.doActive=function()
     	log:print("[Coordinator.doActive] - ALGO Seq: "..k.." is not instantiated")
     end
   end
-
-end
-
-Coordinator.send=function(algoId, dst, buf)
-
-		local algo = nil
-	  for k,v in pairs(Coordinator.algos) do 
-   	    if v.id==algoId then
-   	  		 algo = v.obj
-   	    end
-    end
-		--local algo=Coordinator.algos[algoId]
-
-	  log:print("Cycle / 2 "..algo.cycle_period)
-		local ok, r = rpc.acall(dst.peer,{"Coordinator.passive_thread", algoId, job.position, buf}, algo.cycle_period/2)
-		return ok, r
 end
 
 Coordinator.passive_thread=function(algoId, from, buffer)
@@ -103,6 +83,20 @@ Coordinator.passive_thread=function(algoId, from, buffer)
 		local ret = algo:passive_thread(from, buffer)
 		--log:print("buffer size: "..#buffer)
 		return ret
+end
+
+Coordinator.send=function(algoId, dst, buf)
+
+		local algo = nil
+	  for k,v in pairs(Coordinator.algos) do 
+   	    if v.id==algoId then
+   	  		 algo = v.obj
+   	    end
+    end
+		--local algo=Coordinator.algos[algoId]
+	  --log:print("Cycle / 2 "..algo.cycle_period)
+		local ok, r = rpc.acall(dst.peer,{"Coordinator.passive_thread", algoId, job.position, buf}, algo.cycle_period/2)
+		return ok, r
 end
 
 
