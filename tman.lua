@@ -670,7 +670,7 @@ function PSS.getNodeID(self) return self.me:getID() end
 				
 			else
 				if i==3 then 
-			  		log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." after "..exchange_retry.." failed retrials, removing " ..selected_peer.id.." from the view") 				
+			  		log:print(currentMethod.." [CONNECTION FAILED]  at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." after "..exchange_retry.." failed retrials, removing " ..selected_peer.id.." from the view") 				
 					  --table.remove(self.view,partner_ind)
 				else
 				  local w_delay = math.random(0.5, self.cycle_period * 0.5)
