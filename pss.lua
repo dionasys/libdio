@@ -162,7 +162,6 @@ function PSS.pss_selectToSend(self, t_type)
 		
 		local toSend = {}
 		-- insert own descriptor to "toSend" buffer =>  buffer = ((MyAddress,0)) from original algo.
-		--self.me:setAge(0)
 		table.insert(toSend, self.me) 
 
 		--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." ANTES " ) 
@@ -218,9 +217,9 @@ function PSS.pss_selectToSend(self, t_type)
     	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." PSS.pss_SELECTTOSEND() - END.")
     end
 		return toSend
-	end
+end
 ----------------------------------------------------
-	function PSS.pss_selectToKeep(self, received, t_type)
+function PSS.pss_selectToKeep(self, received, t_type)
 		
 		-- logs	
 	  local currentMethod = "[("..t_type..") -  PSS.pss_SELECTTOKEEP() ] - "
@@ -261,22 +260,12 @@ function PSS.pss_selectToSend(self, t_type)
 				
 					if self.logDebug then
 						log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." EQUAL nodes found in the view, view#: "..#self.view.." i: "..i.." j: "..j)
-     	  	  --log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." self.view[i].id="..self.view[i].id)
-     			  --log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." self.view[i].peer.ip="..self.view[i].peer.ip)
- 	      	  --log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." self.view[i].peer.port="..self.view[i].peer.port)
-   	    	  --log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." self.view[i].age="..self.view[i].age)
-    	  	  --log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." self.view[j].id="..self.view[j].id)
-    	  	  --log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." self.view[j].peer.ip="..self.view[j].peer.ip)
-    	  	  --log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." self.view[j].peer.port="..self.view[j].peer.port)
-     	  	  --log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." self.view[j].age="..self.view[j].age)
-     			  --log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." COMPARING AGES")
 					end
 				
 					if self.view[i].age < self.view[j].age then 
 						log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." self.view[i].age < self.view[j].age ")
 						table.remove(self.view,j) -- delete the oldest
 				  else
-				  	--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." self.view[i].age > or = self.view[j].age ")
 						table.remove(self.view,i)
 				  end
 					i = i - 1 
@@ -292,46 +281,12 @@ function PSS.pss_selectToSend(self, t_type)
 		end
 
 		-- remove old items from the view: the number of the nodes to remove is defined by min(H,#view-c) 
-		local o = math.min(self.H,#self.view-self.c)
+		local numberToRemove = math.min(self.H,#self.view-self.c)
 		if self.logDebug then
 			-- only for debugging
    		log:print(currentMethod.."[SELECTTOKEEP] : will remove the min (H="..self.H..",#view-c="..#self.view-self.c..")= "..o.." OLDEST ITEMS")
 		end
-		
-		local diff = false
-		if #self.view>1 then
-			-- first checks if elements have different ages
-			for i=1,#self.view-1 do
-				if self.view[i].age ~= self.view[i+1].age then
-		   		diff = true
-				end
-			end
-			-- if so proceeds with the removal
-			if diff then
-					while o > 0 do
-						local oldest_index = -1
-						local oldest_age = 0  -- oldest age starts at 0 instead of -1
-						for i=1,#self.view do 
-							if oldest_age < self.view[i].age then
-								oldest_age = self.view[i].age
-								oldest_index = i
-							end
-						end
-						if  oldest_index > -1 then 
-							if self.logDebug then
-								log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." removing oldest node: "..self.view[oldest_index].id.."("..self.view[oldest_index].age..")")
-							end
-							table.remove(self.view,oldest_index)
-						end
-						o = o - 1
-					end
-			else
-			    if self.logDebug then
-			   	  log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." NO NODES WITH DIFFERENT AGES WERE FOUND to remove the oldest nodes")
-			   	end
-			end
-			
-		end
+		self.remove_old_entries(numberToRemove)
 
 		if self.logDebug then
 			-- only for debugging
@@ -366,14 +321,58 @@ function PSS.pss_selectToSend(self, t_type)
 			self.utils:print_this_view(currentMethod.."PSS_VIEW after all SELECTTOKEEP:", self.view, self.cycle_numb, self.algoId)	
 			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." PSS.pss_SELECTTOKEEP() - END.")
 		end
-	end
+end
 
 ----------------------------------------------------
-	function PSS.pss_send_at_rpc(self,peer,pos,buf)
-	  log:print("Cycle / 2 "..self.cycle_period)
+function PSS.remove_old_entries(self, toRemove)
+		-- toRemove is the number of nodes to be removed
+		
+		local diff = false
+		
+		-- first: checks if the view has elements in it, no operation is done if view is empty
+		if #self.view>1 then 
+			-- then: checks if elements in the view have different ages: if all have the same age, no 'old' node to be removed
+			for i=1,#self.view-1 do
+				if self.view[i].age ~= self.view[i+1].age then
+		   		diff = true
+				end
+			end
+			
+			if diff then
+				-- if there is an age difference: proceeds with the removal
+					while toRemove > 0 do
+						local oldest_index = -1
+						local oldest_age = 0  -- oldest age should starts at 0 instead of -1
+						for i=1,#self.view do -- traverses the view to find the index of the oldest node.
+							if oldest_age < self.view[i].age then
+								oldest_age = self.view[i].age
+								oldest_index = i
+							end
+						end
+						if  oldest_index > -1 then 
+							if self.logDebug then
+								log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." removing oldest node: "..self.view[oldest_index].id.."("..self.view[oldest_index].age..")")
+							end
+							table.remove(self.view,oldest_index)
+						end
+						toRemove = toRemove - 1
+					end
+			else
+				-- if all nodes have the same age, just informe
+				if self.logDebug then
+					log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." NO NODES WITH DIFFERENT AGES WERE FOUND to remove the oldest nodes")
+				end
+			end
+			
+		end
+		
+end
+----------------------------------------------------
+
+function PSS.pss_send_at_rpc(self,peer,pos,buf)
 		local ok, r = rpc.acall(peer,{"pss_passive_thread",pos, buf, self}, self.cycle_period/2)
 		return ok, r
-	end
+end
 -----------------------------------------------------
 function PSS.remove_all_instances_of_me(view, id)
 	-- removes all instances of an id from the view without calling other functions.
@@ -407,7 +406,7 @@ end
 	-- PSS PASSIVE THREAD
 ----------------------------------------------------
 
-	function PSS.passive_thread(self, from, buffer)
+function PSS.passive_thread(self, from, buffer)
 	-- TODO maybe consider a queue for passive threads ? to received the requests. 
 	--test with locks
 		--self.view_lock:lock()
@@ -455,12 +454,12 @@ end
 		
 		-- self.view_lock:unlock()
 		return ret
-	end
+end
 ----------------------------------------------------
 	-- PSS ACTIVE THREAD
 ----------------------------------------------------
 	
-	function PSS.active_thread(self)	
+function PSS.active_thread(self)	
 		-- test with lock	
 	 -- self.view_lock:lock()
 	 self.ongoing_rpc=true
@@ -470,24 +469,18 @@ end
  	  	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.ACTIVE_THREAD] - STARTED")
 			self.utils:print_this_view(currentMethod.."CURRENT PSS_VIEW: ", self.view, self.cycle_numb, self.algoId)
 		end
-		
 
 		if not self.is_init then
 			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." PSS.IS_INIT is false: [PSS.ACTIVE_THREAD] - END")
 			--self.view_lock:unlock()
 			return false
 		end
-		
 
-		
-
-		--local exchange_aborted=true
 		local retry = true
 		local exchange_retry=3
-			
+
 		-- select a neighbour to send (part of) its view : view.selectPeer() method from original algo
 		local partner_ind = self.pss_selectPartner(self)
-		
 		if not partner_ind then
 				log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." : no partner selected (PSS_VIEW is empty?)")
 				if self.logDebug then
@@ -496,14 +489,11 @@ end
 				return
 		end	
 		local partner = self.view[partner_ind]
-		
 		if self.logDebug then
 			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." selected node to exchange: "..partner.id)
 		end
 		
 	  -- select buffer to send: select view elements to send	
-		--local buffer = self.pss_selectToSend(self, "ACTIVE_THREAD")
-
 			local buffer = self.pss_selectToSend(self, "ACTIVE_THREAD")
 
 		-- try to exchange with selected
@@ -537,8 +527,9 @@ end
 				
 			else
 				if i==3 then 
-					log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." after "..exchange_retry.." failed retrials")
-			  		--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." after "..exchange_retry.." failed retrials, removing " ..partner.id.." from the view") 				
+					log:print(currentMethod.." [CONNECTION FAILED] at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." after "..exchange_retry.." failed retrials")
+					-- should or shouldnt remove it? I thing the protocol its self would do it. In some implementations I've seen it is removed though
+						--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." after "..exchange_retry.." failed retrials, removing " ..partner.id.." from the view") 				
 						--table.remove(self.view,partner_ind)
 				else
 				  local w_delay = math.random(0.5, self.cycle_period * 0.5)
@@ -549,7 +540,6 @@ end
 				end
 			end		
 			
-			--if exchange_aborted==false then 
 			if retry==false then
 					if self.logDebug then
    				log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." - retry==false : breaking the loop at retry#: "..i)
@@ -562,8 +552,7 @@ end
 		-- sort view by id
 		-- table.sort(self.view,function(a,b) return a.id < b.id end)
 		
-		-- make a copy of the current view: this copy is used by method getPeer() which is the method offered by the PSS API to other protocols to access the view. 
-		-- e.g., getPeer is the method used by TMAN to get PSS' view
+		-- make a copy of the current view: this copy is used by method getPeer() which is the method offered by the PSS API to other protocols to access the view. e.g., getPeer is the method used by TMAN to get PSS' view
 		self.view_copy_lock:lock()
 			self.view_copy = misc.dup(self.view)
 		self.view_copy_lock:unlock()
@@ -580,42 +569,25 @@ end
 		for _,v in ipairs(self.view) do
 				v.age = v.age+1
 		end
-		
 
-	  -- debug: 	
-	  if self.logDebug then
-    	self.utils:print_this_view(currentMethod.."CURRENT PSS_VIEW: ", self.view, self.cycle_numb, self.algoId)	
-		end
-		------------------------------------------------------------------------------------	
-		-- TEST DEBUG: adds IDs of known nodes to a global set/table called all_known_nodes
-		--for _,v in pairs(self.view) do
-		--  self.add_to_known_ids_set(self, v)  
-		--end
-		
-		--TODO: remove it later: this is for debugging only. 
-		--if self.logDebug then
-		--	log:print("[PSS.active_thread] - PSS_VIEW CONVERGENCE at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." all_known_nodes size: "..#self.all_known_nodes)
-		--end
-		------------------------------------------------------------------------------------
-		
-    -- print view	
-    self.utils:print_this_view(currentMethod.."CURRENT PSS_VIEW: ", self.view, self.cycle_numb, self.algoId)	
+		-- print view	
+		self.utils:print_this_view(currentMethod.."CURRENT PSS_VIEW: ", self.view, self.cycle_numb, self.algoId)	
 	
 		if self.logDebug then
 			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.ACTIVE_THREAD] - END")
-    end
-    -- increase cycle number
+		end
+		-- increase cycle number
 		self.cycle_numb = self.cycle_numb+1
 		-- allow incoming passive threads
 		self.ongoing_rpc = false	
 		
 		--self.view_lock:unlock()
 			
-	end
+end
 	
 ----------------------------------------------------
 
-	function PSS.getPeer(self)
+function PSS.getPeer(self)
 		
 		local currentMethod = "[PSS.GETPEER] - "
 		
@@ -646,10 +618,10 @@ end
 		
 		return peer
 		
-	end
+end
 ----------------------------------------------------
 	
-	function PSS.getViewSnapshot(self)
+function PSS.getViewSnapshot(self)
 		
 		local currentMethod = "[PSS.GETVIEWSNAPSHOT] - "
 	  if self.logDebug then
@@ -660,7 +632,7 @@ end
 	end
 ----------------------------------------------------
 
-	function PSS.init(self, selected_indexes)
+function PSS.init(self, selected_indexes)
 	
 	local currentMethod = "[PSS.INIT]"
 	
@@ -719,7 +691,7 @@ end
 		self.is_init=true
 		
 
-	end
+end
 ------------------------------------------------------------------------
 function PSS.getRemotePayload(self, dst)
 
