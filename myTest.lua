@@ -45,41 +45,42 @@ function main()
 	
 	
 		local node = Node.new(job.me) 
-	-- this below is used only if we want to set an id different than job.position, a computeID_function can be added (examples above) for specific app requirements
-	--local idHexaDigits = {8}
-	--node:set_computeID_function(myComputeIDFunc2, idHexaDigits)
-	--local myid = node:computeID_function(node:getIP(), node:getPort())
-	--node:setID(myid)
-	
-		log:print("APP START - node: "..job.position.." id: "..node:getID().." ip/port: ["..node:getIP()..":"..node:getPort().."]")
-	
-	-- setting PSS 
-		local pss = PSS.new(10, 1, 1, 5, 5, "tail", node)   -- parameters: c (view size) , h (healing), s (swappig), fanout, cyclePeriod, peer_selection_policy , me
-		Coordinator.addProtocol("pss1", pss)
-	
-	-- -- setting TMAN 
-		local tman_base_protocols={pss}
-		local tman = TMAN.new(node, 5, 5, tman_base_protocols, "pss1")   -- parameters: me, view size, cycle_period, base_procotols, active_b_proto, algoId
---    	log:print("at node: "..job.position.." id: "..node:getID().." self tman: "..tostring(tman))
---    	Coordinator.addProtocol("tman1", tman)
---    	-- Test: jaccard based distance function
---     --tman:set_distance_function(tman, jaccard_distance)
---     --tman:set_node_representation(select_topics_according_to_id())
---    	--tman:set_node_representation(rep)
---     
---    	-- Test: Clockwise-ring distance function
-		tman:set_distance_function(id_based_ring_distance)
-		local m = {8} -- number of bits which is used by the distance function to calculate the distance in the ring
-		tman:set_distFunc_extraParams(m)
-		local rep={}
-		rep[1] = node:getID()
-		node:setPayload(rep)
-   
-   -- setting logs on/off 
-		pss:setLog(true)
-		tman:setLog(true)
---		-- launching protocols
-		Coordinator.launch(600, 5)  -- parameters: running time in seconds, delay to start each protocol
+  	-- this below is used only if we want to set an id different than job.position, a computeID_function can be added (examples above) for specific app requirements
+  	--local idHexaDigits = {8}
+  	--node:set_computeID_function(myComputeIDFunc2, idHexaDigits)
+  	--local myid = node:computeID_function(node:getIP(), node:getPort())
+  	--node:setID(myid)
+  	
+  		log:print("APP START - node: "..job.position.." id: "..node:getID().." ip/port: ["..node:getIP()..":"..node:getPort().."]")
+  	
+  	-- setting PSS 
+  		local pss = PSS.new(10, 1, 1, 5, 5, "tail", node)   -- parameters: c (view size) , h (healing), s (swappig), fanout, cyclePeriod, peer_selection_policy , me
+  		Coordinator.addProtocol("pss1", pss)
+  	
+  	-- -- setting TMAN 
+--		local tman_base_protocols={pss}
+--		local tman = TMAN.new(node, 5, 5, tman_base_protocols, "pss1")   -- parameters: me, view size, cycle_period, base_procotols, active_b_proto, algoId
+  --    	log:print("at node: "..job.position.." id: "..node:getID().." self tman: "..tostring(tman))
+  --    	Coordinator.addProtocol("tman1", tman)
+  --    	-- Test: jaccard based distance function
+  --     --tman:set_distance_function(tman, jaccard_distance)
+  --     --tman:set_node_representation(select_topics_according_to_id())
+  --    	--tman:set_node_representation(rep)
+  --     
+  --    	-- Test: Clockwise-ring distance function
+--  		tman:set_distance_function(id_based_ring_distance)
+--  		local m = {8} -- number of bits which is used by the distance function to calculate the distance in the ring
+--  		tman:set_distFunc_extraParams(m)
+--  		local rep={}
+--  		rep[1] = node:getID()
+--  		node:setPayload(rep)
+     
+     -- setting logs on/off 
+  		pss:setLog(true)
+--		tman:setLog(true)
+  --		-- launching protocols
+		Coordinator.showProtocols()
+		Coordinator.launch(node, 600, 5)  -- parameters: local node ref, running time in seconds, delay to start each protocol
 
 end
 
