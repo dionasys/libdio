@@ -58,9 +58,10 @@ Coordinator.launch=function(node, running_time, delay)
 
 local peerToBoot = Coordinator.bootstrap(node)
 --if peerToBoot then
-		print('My position is '..job.position..' and I will bootstrap with peer '..tostring(peerToBoot.id))
+		log:print("[Coordinator.bootstrap] - at node: "..job.position.." will bootstrap with node: "..tostring(peerToBoot.id))
 		for _, algo in pairs(Coordinator.algos) do
-		  algo.obj:init(peerToBoot)   --events.periodic(algo:getCyclePeriod(), algo:active_thread())
+		  algo.obj:init(peerToBoot)   
+			--events.periodic(algo:getCyclePeriod(), algo:active_thread())
 		end
 --end 
  
@@ -159,15 +160,15 @@ end
 
 
 Coordinator.callAlgoMethod = function(algoId, method, payload, dst, srcId)
-	log:print('callAlgoMethod invoked request of peer '..srcId..' for calling method: '..method..' of algorithm: '..algoId)
+	log:print("[Coordinator.CALLALGOMETHOD] - COORDINATOR at node: "..job.position.." callAlgoMethod invoked from node "..srcId.." for method: "..method.." of protocol: "..algoId)
   local ok = rpc.acall(dst, {"Coordinator.dispatch", algoId, method, payload, srcId}, 3)
   if not ok then 
-		print('Exchange with peer '..dst.id..' was not completed, continuing') 
+		log:print("[Coordinator.CALLALGOMETHOD] - COORDINATOR at node: "..job.position.." exchange with node "..dst.id.." did not complete, continuing") 
 	end
 end
 
 Coordinator.dispatch = function(algoId, method, payload, srcId)
-	log:print('Doing request of peer '..srcId..' for calling method: '..method..' of algorithm: '..algoId)
+	log:print("[Coordinator.DISPATCH] - COORDINATOR at node: "..job.position.." request from node "..srcId.." for method: "..method.." of protocol: "..algoId)
 	
 	local algo = nil
   for k,v in pairs(Coordinator.algos) do 
@@ -179,7 +180,7 @@ Coordinator.dispatch = function(algoId, method, payload, srcId)
 	if algo then 
 		algo[method](algo, payload)
 	else 
-		log:print('There is no instance of algorithm '..algoId) 
+		log:warning("[Coordinator.DISPATCH] - COORDINATOR at node: "..job.position.." No instance of algorithm "..algoId.." found") 
 	end
 end
 
