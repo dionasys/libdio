@@ -46,7 +46,7 @@ function PSS.setAlgoID(self, algoId) self.algoId = algoId end
 function PSS.getAlgoID(self) return self.algoId end
 function PSS.getNode(self) return self.me end
 function PSS.getNodeID(self) return self.me:getID() end
-
+function PSS.get_id(self) return self.me.id end
 ----------------------------------------------------
 
 function PSS.pss_selectPartner(self, viewCopy)
@@ -660,11 +660,9 @@ end
 -- end
 function PSS.init(self, peerToBoot)
 	
-	--	local currentMethod = "[PSS.INIT]"
-	--	log:print(currentMethod.." at node: "..job.position.." - INIT START ")
-	--	
-  --
-	--	
+local currentMethod = "[PSS.INIT]"
+log:print(currentMethod.." at node: "..job.position.." - INIT START ")
+
 	--	if not peerToBoot then 
 	--		log:print(currentMethod.." at node: "..job.position.." - INIT did not receive a peer to bootstrap.")
 	--		return 
@@ -684,65 +682,22 @@ function PSS.init(self, peerToBoot)
 	--	events.periodic(self.cycle_period, function() self.active_thread(self) end)
 	--	log:print(currentMethod.." at node: "..job.position.." - INIT END")
 	
-  print('Doing INIT')
   if not peerToBoot then return end
   self.view[#self.view + 1] = peerToBoot
   local try = 0
   while events.yield() do
     if rpc.ping(peerToBoot.peer, 3) then break end
     try = try + 1
-    print('Peer '..peerToBoot.id..' is not available to bootstrap, it will be contacted later. Try num: '..try)
+		log:print(currentMethod.." at node: "..job.position.." - node "..peerToBoot.id.." is not available to bootstrap, trying again. Try num: "..try)
     events.sleep(2)
   end
-  print('INIT DONE')
-	
+
+	log:print(currentMethod.." at node: "..job.position.." - PSS INIT END")
   events.periodic(self.cycle_period, function() self.active_thread(self) end)
 	
 end
 
-function PSS.test()
-	log:print("TESTE")
-end
+-- -----------------------------------------------------------------------
 
--- ------------------------------------------------------------------------
-function PSS.getRemotePayload(self, dst)
-
-	 
-    local currentMethod = "[PSS.INIT.GETREMOTEPAYLOAD] - "
-    local received_payload = {}
-    
-    if(dst==nil) then
-    else
-         log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." DST NOT NILL" )
-    end
-    log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." trying to update data from node id: "..tostring(dst.ip)) 
-                 
-		local ok, r = rpc.acall(dst,{tostring(self.algoId..".getLocalPayload"), me})
-		if ok then
-				log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." received - ok==true - from REMOTE node: "..tostring(dst.ip))
-			
-				local received_pl = r[1]
-				if received_pl==false then
-  				log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." - received_pl [false] from REMOTE node: "..tostring(dst.ip))
-				else
-					log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." - received_pl [payload buffer] from REMOTE node: "..tostring(dst.ip))
-					received_payload = received_pl
-				end
-		else
-			  log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." received [ok==false] from REMOTE node: "..tostring(dst.ip))	 
-		end
-		return received_payload
-end	
-------------------------------------------------------------------------
-function PSS.getLocalPayload(self, from)
- 	  -- this method may be useless - check used to test the bootstrap but may be remove later. 
-    local currentMethod = "[PSS.GETPAYLOAD] - "
-    log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." invoked from: "..tostring(from.id))
-		return self.me.payload
-end
-------------------------------------------------------------------------
-function PSS.get_id(self)
-  return self.me.id
-end
 
 ------------------------ END OF CLASS PSS ----------------------------
