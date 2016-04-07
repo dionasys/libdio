@@ -35,6 +35,16 @@ end
 Coordinator.launch=function(node, running_time, delay)
 	-- set termination thread
  	events.thread(function() events.sleep(running_time) os.exit() end)
+	
+	local peerToBoot = Coordinator.bootstrap(node)
+	--if peerToBoot then
+	log:print("[Coordinator.bootstrap] - at node: "..job.position.." will bootstrap with node: "..tostring(peerToBoot.id))
+	for _, algo in pairs(Coordinator.algos) do
+	  algo.obj:init(peerToBoot)   
+		--events.periodic(algo:getCyclePeriod(), algo:active_thread())
+		events.sleep(delay)
+	end
+	--end 
 -- 
 -- 	local bootstrapPeer = Coordinator.bootstrap(node)
 -- 	log:print("COORDINATOR [launch] - at node: "..job.position.." will bootstrap with peer id: "..tostring(bootstrapPeer:getID()))
@@ -54,18 +64,6 @@ Coordinator.launch=function(node, running_time, delay)
 -- 		events.sleep(delay)
 -- 	end
 
-
-
-local peerToBoot = Coordinator.bootstrap(node)
---if peerToBoot then
-		log:print("[Coordinator.bootstrap] - at node: "..job.position.." will bootstrap with node: "..tostring(peerToBoot.id))
-		for _, algo in pairs(Coordinator.algos) do
-		  algo.obj:init(peerToBoot)   
-			--events.periodic(algo:getCyclePeriod(), algo:active_thread())
-			events.sleep(delay)
-		end
---end 
- 
 end
 
 Coordinator.doActive=function()
@@ -162,7 +160,7 @@ end
 
 Coordinator.callAlgoMethod = function(algoId, method, payload, dst, srcId)
 
-	log:print("[Coordinator.CALLALGOMETHOD] - COORDINATOR at node: "..job.position.." callAlgoMethod invoked from node "..srcId.." for method: "..method.." of protocol: "..algoId)
+	log:print("[Coordinator.CALLALGOMETHOD] - COORDINATOR at node: "..job.position.." callAlgoMethod invoked from node: "..srcId.." for method: "..method.." of protocol: "..algoId.." at node: "..dst.id)
   local ok = rpc.acall(dst, {"Coordinator.dispatch", algoId, method, payload, srcId}, 3)
   if not ok then 
 		log:print("[Coordinator.CALLALGOMETHOD] - COORDINATOR at node: "..job.position.." exchange with node "..dst.id.." did not complete, continuing") 
@@ -170,7 +168,7 @@ Coordinator.callAlgoMethod = function(algoId, method, payload, dst, srcId)
 end
 
 Coordinator.dispatch = function(algoId, method, payload, srcId)
-	log:print("[Coordinator.DISPATCH] - COORDINATOR at node: "..job.position.." request from node "..srcId.." for method: "..method.." of protocol: "..algoId)
+	log:print("[Coordinator.DISPATCH] - COORDINATOR at node: "..job.position.." request from node: "..srcId.." for method: "..method.." of protocol: "..algoId)
 	
 	local algo = nil
   for k,v in pairs(Coordinator.algos) do 
