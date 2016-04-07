@@ -285,7 +285,7 @@ end
 --  			  if self.logDebug then
 --  			  	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." REMOVING HEAD node: "..viewCopy[1].id.."("..viewCopy[1].age..")")
 --   				end
---  				table.remove(viewCopy,1)
+  				table.remove(viewCopy,1)
   				o = o - 1
   			end
 			else
@@ -300,7 +300,7 @@ end
 --		  if self.logDebug then 
 --		  	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." PSS_VIEW copy size: "..#viewCopy)
 --		  end
-		  local randnode_index = math.random(#viewCopy)
+				local randnode_index = math.random(#viewCopy)
 --  			  if self.logDebug then
 --  			  	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." removing random node: "..viewCopy[randnode_index].id.."("..viewCopy[randnode_index].age..")")
 --  			  end
@@ -422,18 +422,18 @@ function PSS.passive_thread(self, from, buffer)
 		-- make a copy
 		local viewCopy = self.getViewCopy(self)
 		
-		if self.logDebug then
-		  log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.PASSIVE_THREAD] - STARTED")
-		  self.utils:print_this_view(currentMethod.." CURRENT PSS_VIEW: ", viewCopy, self.cycle_numb, self.algoId)
-			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." - size of received VIEW (buffer): "..#buffer.." from "..from.id)
-			self.utils:print_this_view(currentMethod.." received VIEW (buffer) from "..from.id, buffer, self.cycle_numb, self.algoId)
-		end	
+		--if self.logDebug then
+		  --log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.PASSIVE_THREAD] - STARTED")
+		  self.utils:print_this_view("[PSS.PASSIVE_THREAD_START] - CURRENT PSS_VIEW: ", viewCopy, self.cycle_numb, self.algoId)
+			--log:print("[PSS.PASSIVE_THREAD_RECEIVED] -  at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." - size of received VIEW (buffer): "..#buffer.." from "..from.id)
+			self.utils:print_this_view("[PSS.PASSIVE_THREAD_RECEIVED] received VIEW (buffer) from "..from.id, buffer, self.cycle_numb, self.algoId)
+			--end	
 		
 		-- select to send		
 		local retView = self.pss_selectToSend(self, "PASSIVE_THREAD", viewCopy)
-		if self.logDebug then
-			self.utils:print_this_view(currentMethod.." VIEW SELECTED TO RETURN (buffer): ", retView, self.cycle_numb, self.algoId)
-		end
+		--if self.logDebug then
+		--	self.utils:print_this_view(currentMethod.." VIEW SELECTED TO RETURN (buffer): ", retView, self.cycle_numb, self.algoId)
+		--end
 		-- send a callback to the sender to invoke the method activeThreadSuccess() with the selected view 'retView' 
 		Coordinator.callAlgoMethod(self.algoId, 'activeThreadSuccess', retView, from, self.me.id)
 		
@@ -450,10 +450,10 @@ function PSS.passive_thread(self, from, buffer)
 		--	end
 		--self.view_lock:unlock()
 
-		self.utils:print_this_view(currentMethod.." CURRENT PSS_VIEW after ALL PSS PASSIVE THREAD: ", self.view, self.cycle_numb, self.algoId)
-		if self.logDebug then
-			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.PASSIVE_THREAD] - END")
-		end
+		self.utils:print_this_view("[PSS.PASSIVE_THREAD_END] - CURRENT PSS_VIEW after ALL PSS PASSIVE THREAD: ", self.view, self.cycle_numb, self.algoId)
+		--if self.logDebug then
+		--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.PASSIVE_THREAD] - END")
+		--end
 		
 end
 ----------------------------------------------------
@@ -465,10 +465,10 @@ function PSS.active_thread(self)
 
   	local currentMethod = "[PSS.ACTIVE_THREAD] - "
   	
-  	if self.logDebug then
- 	  	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.ACTIVE_THREAD] - STARTED")
-			self.utils:print_this_view(currentMethod.."CURRENT PSS_VIEW: ", self.view, self.cycle_numb, self.algoId)
-		end
+  	--if self.logDebug then
+ 	  --	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.ACTIVE_THREAD] - STARTED")
+			self.utils:print_this_view("[PSS.ACTIVE_THREAD_START] - CURRENT PSS_VIEW: ", self.view, self.cycle_numb, self.algoId)
+			--end
 		
 		local viewCopy = self.getViewCopy(self)
 
@@ -485,9 +485,9 @@ function PSS.active_thread(self)
 				return
 		end	
 		local partner = viewCopy[partner_ind]
-		if self.logDebug then
-			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." selected node to exchange: "..partner.id)
-		end
+		--if self.logDebug then
+		--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." selected node to exchange: "..partner.id)
+		--end
 		--table.remove(viewCopy, partner_ind)
 		
 	  -- select buffer to send: select view elements to send	
@@ -506,9 +506,9 @@ function PSS.active_thread(self)
 		-- make a copy of the current view: this copy is used by method getPeer() offered by the PSS API to other protocols
 		self.view_copy = self.getViewCopy(self)
 
-	  if self.logDebug then
-    	self.utils:print_this_view(currentMethod.."SELF.VIEW_COPY_PSS: ", self.view_copy, self.cycle_numb, self.algoId)	
-		end
+	  --if self.logDebug then
+    --	self.utils:print_this_view(currentMethod.."SELF.VIEW_COPY_PSS: ", self.view_copy, self.cycle_numb, self.algoId)	
+		--end
 
 			-- increase the age of all nodes in the view and cycle number
 		self.view_lock:lock()
@@ -519,11 +519,11 @@ function PSS.active_thread(self)
 		self.view_lock:unlock()
 
 		-- print view	
-		self.utils:print_this_view(currentMethod.."CURRENT PSS_VIEW: ", self.view, self.cycle_numb, self.algoId)	
+		self.utils:print_this_view("[PSS.ACTIVE_THREAD_END] - CURRENT PSS_VIEW: ", self.view, self.cycle_numb, self.algoId)	
 	
-		if self.logDebug then
-			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.ACTIVE_THREAD] - END")
-		end
+		--if self.logDebug then
+		--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.ACTIVE_THREAD] - END")
+		--end
 
 end
 
@@ -574,8 +574,11 @@ function PSS.getViewSnapshot(self)
 
 function PSS.getPeer(self)
 		
-		local currentMethod = "[PSS INTERFACE - PSS.GETPEER] - "
+		local currentMethod = "[PSS.GETPEER] - "
 		local viewCopy = self.getViewCopy(self)
+		
+		self.utils:print_this_view("[PSS.GETPEER]] - CURRENT PSS_VIEW: ", self.view, self.cycle_numb, self.algoId)	
+		
 		local peer=nil
 		
 		if #viewCopy ~= 0 then 
@@ -660,9 +663,24 @@ end
 -- end
 function PSS.init(self, peerToBoot)
 	
-local currentMethod = "[PSS.INIT]"
-log:print(currentMethod.." at node: "..job.position.." - START ")
+	local currentMethod = "[PSS.INIT] - "
+	--log:print(currentMethod.." at node: "..job.position.." - START ")
 
+  if not peerToBoot then return end
+  self.view[#self.view + 1] = peerToBoot
+	
+  local try = 0
+  while events.yield() do
+    if rpc.ping(peerToBoot.peer, 3) then break end
+    try = try + 1
+		--log:print(currentMethod.." at node: "..job.position.." - node "..peerToBoot.id.." is not available to bootstrap, trying again. Try num: "..try)
+    events.sleep(2)
+  end
+
+	self.utils:print_this_view(currentMethod.."CURRENT PSS_VIEW(INIT_VIEW): ", self.view, self.cycle_numb, self.algoId)	
+	--log:print(currentMethod.." at node: "..job.position.." - INIT END")
+  events.periodic(self.cycle_period, function() self.active_thread(self) end)
+	
 	--	if not peerToBoot then 
 	--		log:print(currentMethod.." at node: "..job.position.." - INIT did not receive a peer to bootstrap.")
 	--		return 
@@ -682,18 +700,6 @@ log:print(currentMethod.." at node: "..job.position.." - START ")
 	--	events.periodic(self.cycle_period, function() self.active_thread(self) end)
 	--	log:print(currentMethod.." at node: "..job.position.." - INIT END")
 	
-  if not peerToBoot then return end
-  self.view[#self.view + 1] = peerToBoot
-  local try = 0
-  while events.yield() do
-    if rpc.ping(peerToBoot.peer, 3) then break end
-    try = try + 1
-		log:print(currentMethod.." at node: "..job.position.." - node "..peerToBoot.id.." is not available to bootstrap, trying again. Try num: "..try)
-    events.sleep(2)
-  end
-
-	log:print(currentMethod.." at node: "..job.position.." - INIT END")
-  events.periodic(self.cycle_period, function() self.active_thread(self) end)
 	
 end
 
