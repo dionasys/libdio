@@ -54,12 +54,12 @@ function main()
   		log:print("APP START - node: "..job.position.." id: "..node:getID().." ip/port: ["..node:getIP()..":"..node:getPort().."]")
   	
   	-- setting PSS 
-  		local pss = PSS.new(5, 1, 1, 5, 5, "tail", node)   -- parameters: c (view size) , h (healing), s (swappig), fanout, cyclePeriod, peer_selection_policy , me
+  		local pss = PSS.new(8, 1, 1, 4, 5, "tail", node)   -- parameters: c (view size) , h (healing), s (swappig), fanout, cyclePeriod, peer_selection_policy , me
   		Coordinator.addProtocol("pss1", pss)
   	
   	-- -- setting TMAN 
 		local tman_base_protocols={pss}
-		local tman = TMAN.new(node, 5, 5, tman_base_protocols, "pss1")   -- parameters: me, view size, cycle_period, base_procotols, active_b_proto, algoId
+		local tman = TMAN.new(node, 4, 5, tman_base_protocols, "pss1")   -- parameters: me, view size, cycle_period, base_procotols, active_b_proto, algoId
   --    	log:print("at node: "..job.position.." id: "..node:getID().." self tman: "..tostring(tman))
 		Coordinator.addProtocol("tman1", tman)
   --    	-- Test: jaccard based distance function
@@ -80,7 +80,7 @@ function main()
 		--tman:setLog(true)
 		--launching protocols
 		Coordinator.showProtocols()
-		Coordinator.launch(node, 300, 30	)  -- parameters: local node ref, running time in seconds, delay to start each protocol
+		Coordinator.launch(node, 600, 0)  -- parameters: local node ref, running time in seconds, delay to start each protocol
 
 end
 
