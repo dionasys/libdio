@@ -161,14 +161,7 @@ end
 
 
 Coordinator.callAlgoMethod = function(algoId, method, payload, dst, srcId)
-	if aldoId then log:print("algoId is not nil") else log:print("algoID is nil") end	
-	if method then log:print("method is not nil") else log:print("method is nil ") end	
-	if payload then log:print("payload is not nil") else log:print("payload is nil") end	
-	if dst then log:print("dst is not nil ") else log:print("dst is nil ") end	
-	if srcId then log:print("srcId is not nil") else log:print("srcId is nil") end	
 
-		
-		
 	log:print("[Coordinator.CALLALGOMETHOD] - COORDINATOR at node: "..job.position.." callAlgoMethod invoked from node "..srcId.." for method: "..method.." of protocol: "..algoId)
   local ok = rpc.acall(dst, {"Coordinator.dispatch", algoId, method, payload, srcId}, 3)
   if not ok then 
@@ -181,7 +174,7 @@ Coordinator.dispatch = function(algoId, method, payload, srcId)
 	
 	local algo = nil
   for k,v in pairs(Coordinator.algos) do 
-			log:print(k,v.id)
+			--log:print(k,v.id)
  	    if v.id==algoId then
  	  		 algo = v.obj
  	    end

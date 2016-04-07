@@ -27,7 +27,7 @@ function PSS.new(c, h, s, fanout,cyclePeriod, selection, me)
   self.totalknown = 0
   --self.algoId = algoId
   self.algoId=nil
-  self.logDebug = true
+  self.logDebug = false
  
   self.protoName="PSS"
   
@@ -50,10 +50,10 @@ function PSS.get_id(self) return self.me.id end
 ----------------------------------------------------
 
 function PSS.pss_selectPartner(self, viewCopy)
-	if self.logDebug then 
-		local currentMethod = "[PSS.pss_SELECTPARTNER() ] - "
-		log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." PSS.pss_SELECTPARTNER() - STARTED. method: "..self.SEL)
-	end
+	--if self.logDebug then 
+	--	local currentMethod = "[PSS.pss_SELECTPARTNER() ] - "
+	--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." PSS.pss_SELECTPARTNER() - STARTED. method: "..self.SEL)
+	--end
 	
 	if #viewCopy > 0 then
 		
@@ -147,29 +147,29 @@ end
   		-- insert own descriptor to "toSend" buffer =>  buffer = ((MyAddress,0)) from original algo.
   		table.insert(toSend, self.me) 
   
-  		if self.logDebug then
-  			self.utils:print_this_view(currentMethod.." add own descriptor to toSend buffer: ", toSend, self.cycle_numb, self.algoId)
-  		end
+  --		if self.logDebug then
+  --			self.utils:print_this_view(currentMethod.." add own descriptor to toSend buffer: ", toSend, self.cycle_numb, self.algoId)
+  --		end
   
   		if #viewCopy > 0 then 
   			-- shuffle (permute) the view => view.permute() from original algo  
   			viewCopy = misc.shuffle(viewCopy)
-  			if self.logDebug then
-  				self.utils:print_this_view(currentMethod.." SHUFFLE PSS_VIEW: ", viewCopy, self.cycle_numb, self.algoId)
-  			end
+  	--		if self.logDebug then
+  	--			self.utils:print_this_view(currentMethod.." SHUFFLE PSS_VIEW: ", viewCopy, self.cycle_numb, self.algoId)
+  	--		end
   			
   			-- make a copy 
   			local tmp_view = misc.dup(viewCopy)
   			
-  			if self.logDebug then
-  				self.utils:print_this_view(currentMethod.." COPIED PSS_VIEW to TEMP_VIEW: ", tmp_view, self.cycle_numb, self.algoId)
-  			end
+  		--	if self.logDebug then
+  		--		self.utils:print_this_view(currentMethod.." COPIED PSS_VIEW to TEMP_VIEW: ", tmp_view, self.cycle_numb, self.algoId)
+  		--	end
   			
   			-- sort the tmp_view by age => move oldest H items to end of view 
   			table.sort(tmp_view,function(a,b) return a.age < b.age end)
-  			if self.logDebug then
-  				self.utils:print_this_view(currentMethod.." TEMP_VIEW SORTED BY AGE: ", tmp_view, self.cycle_numb, self.algoId)
-  			end
+  			--if self.logDebug then
+  			--	self.utils:print_this_view(currentMethod.." TEMP_VIEW SORTED BY AGE: ", tmp_view, self.cycle_numb, self.algoId)
+  			--end
   			
   			if #tmp_view-self.H+1 > 0 then 
   				for i=(#tmp_view-self.H+1),#tmp_view do
@@ -218,18 +218,18 @@ end
   			viewCopy[#viewCopy+1] = received[j] 
   		end
   		
-  		if self.logDebug then
-  			self.utils:print_this_view(currentMethod.."PSS: after [merge VIEW + received VIEW] at SELECTTOKEEP ", viewCopy, self.cycle_numb, self.algoId)
-  		end
-   	  
+ -- 		if self.logDebug then
+ -- 			self.utils:print_this_view(currentMethod.."PSS: after [merge VIEW + received VIEW] at SELECTTOKEEP ", viewCopy, self.cycle_numb, self.algoId)
+ -- 		end
+  	  
    	  -- ensures that the local node is not in the merged view.
   		self.remove_all_instances_of_me(viewCopy, self.me.id)
   		
-  		if self.logDebug then
-  			-- only for debugging
-      	self.utils:print_this_view(currentMethod.."PSS: merged VIEW after [removed instances of me] at SELECTTOKEEP ", viewCopy , self.cycle_numb, self.algoId)
-  		end
-  		
+  --	if self.logDebug then
+  --		-- only for debugging
+  --   	self.utils:print_this_view(currentMethod.."PSS: merged VIEW after [removed instances of me] at SELECTTOKEEP ", viewCopy , self.cycle_numb, self.algoId)
+  --	end
+  	
   		-- remove duplicates: let only the newest node if there are duplicates. Remove older ones.
   		local i = 1
   		local condition=false
@@ -237,11 +237,11 @@ end
   			for j=i+1,#viewCopy do
   				condition=viewCopy[i].peer.ip == viewCopy[j].peer.ip and viewCopy[i].peer.port == viewCopy[j].peer.port
   				if condition then	 -- same_peer_but_different_ages
-  					if self.logDebug then
-  						log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." EQUAL nodes found in the viewCopy, view#: "..#viewCopy.." i: "..i.." j: "..j)
-  					end
+  					--if self.logDebug then
+  					--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." EQUAL nodes found in the viewCopy, view#: "..#viewCopy.." i: "..i.." j: "..j)
+  					--end
   					if viewCopy[i].age < viewCopy[j].age then 
-  						log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." viewCopy[i].age < viewCopy[j].age ")
+  						--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." viewCopy[i].age < viewCopy[j].age ")
   						table.remove(viewCopy,j) -- delete the oldest
   				  else
   						table.remove(viewCopy,i)
@@ -253,63 +253,63 @@ end
   			i = i + 1
   		end
   		
-  		if self.logDebug then
-  			-- only for debugging
-  			self.utils:print_this_view(currentMethod.."[PSS: VIEW merged after [DUPLICATES - OLDER AGE] at SELECTTOKEEP:", viewCopy, self.cycle_numb, self.algoId)
-  		end
+  		--if self.logDebug then
+  		--	-- only for debugging
+  		--	self.utils:print_this_view(currentMethod.."[PSS: VIEW merged after [DUPLICATES - OLDER AGE] at SELECTTOKEEP:", viewCopy, self.cycle_numb, self.algoId)
+  		--end
   
 			-- the next 3 steps are well defined in the paper and used to guarantee the size of the view at most C
 			if #viewCopy > self.c then
  			-- 1) remove old items from the view: the number of the nodes to remove is defined by min(H,#view-c) 
 				local numberToRemove = math.min(self.H,#viewCopy-self.c)  
-  			if self.logDebug then
-  				-- only for debugging
-    	 		log:print(currentMethod.."[SELECTTOKEEP] : #viewCopy > self.c : it will remove the min (H="..self.H..",#viewCopy-c="..#viewCopy-self.c..")= "..numberToRemove.." OLDEST ITEMS from viewCopy")
-  		 	end
+  			--if self.logDebug then
+  			--	-- only for debugging
+    	 	--	log:print(currentMethod.."[SELECTTOKEEP] : #viewCopy > self.c : it will remove the min (H="..self.H..",#viewCopy-c="..#viewCopy-self.c..")= "..numberToRemove.." OLDEST ITEMS from viewCopy")
+  		 	--end
   			viewCopy = self.remove_old_entries(self, numberToRemove, viewCopy)
-  			if self.logDebug then
-  				-- only for debugging
-    	 		self.utils:print_this_view(currentMethod.."[PSS: VIEW merged after [remove the min(H,#view-c) OLDEST ITEMS] at SELECTTOKEEP:", viewCopy, self.cycle_numb, self.algoId)
-  		 	end
+  			--if self.logDebug then
+  			--	-- only for debugging
+    	 	--	self.utils:print_this_view(currentMethod.."[PSS: VIEW merged after [remove the min(H,#view-c) OLDEST ITEMS] at SELECTTOKEEP:", viewCopy, self.cycle_numb, self.algoId)
+  		 	--end
 			else
-  			if self.logDebug then
-  				-- only for debugging
-    	 		log:print(currentMethod.."[SELECTTOKEEP] : #viewCopy <= self.c :  it will not remove OLD NODES from viewCopy")
-  		 	end
+--  			if self.logDebug then
+--  				-- only for debugging
+--    	 		log:print(currentMethod.."[SELECTTOKEEP] : #viewCopy <= self.c :  it will not remove OLD NODES from viewCopy")
+--  		 	end
 			end
 			
   		if #viewCopy > self.c then 
   			--2)  remove the S first items from view: min(S,#view-c)
   			o = math.min(self.S,#viewCopy-self.c)
   			while o > 0 do
-  			  if self.logDebug then
-  			  	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." REMOVING HEAD node: "..viewCopy[1].id.."("..viewCopy[1].age..")")
-   				end
-  				table.remove(viewCopy,1)
+--  			  if self.logDebug then
+--  			  	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." REMOVING HEAD node: "..viewCopy[1].id.."("..viewCopy[1].age..")")
+--   				end
+--  				table.remove(viewCopy,1)
   				o = o - 1
   			end
 			else
-  			if self.logDebug then
-    	 		log:print(currentMethod.."[SELECTTOKEEP] : #viewCopy <= self.c :  it will not remove S first NODES from viewCopy")
-  		 	end
+  --			if self.logDebug then
+  --  	 		log:print(currentMethod.."[SELECTTOKEEP] : #viewCopy <= self.c :  it will not remove S first NODES from viewCopy")
+  --		 	end
 			end
   		
 			-- 3) remove items at random: in the case there still are too many peers in the view 
   		if #viewCopy > self.c then 
 				while #viewCopy > self.c do 
-  			  if self.logDebug then 
-  			  	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." PSS_VIEW copy size: "..#viewCopy)
-  			  end
-  			  local randnode_index = math.random(#viewCopy)
-  			  if self.logDebug then
-  			  	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." removing random node: "..viewCopy[randnode_index].id.."("..viewCopy[randnode_index].age..")")
-  			  end
+--		  if self.logDebug then 
+--		  	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." PSS_VIEW copy size: "..#viewCopy)
+--		  end
+		  local randnode_index = math.random(#viewCopy)
+--  			  if self.logDebug then
+--  			  	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." removing random node: "..viewCopy[randnode_index].id.."("..viewCopy[randnode_index].age..")")
+--  			  end
   				table.remove(viewCopy,randnode_index) 
   			end
 			else
-  			if self.logDebug then
-    	 		log:print(currentMethod.."[SELECTTOKEEP] : #viewCopy <= self.c :  it will not remove random NODES from viewCopy")
-  		 	end
+  --			if self.logDebug then
+  --  	 		log:print(currentMethod.."[SELECTTOKEEP] : #viewCopy <= self.c :  it will not remove random NODES from viewCopy")
+  --		 	end
 			end
   		
 			assert (#viewCopy <= self.c, currentMethod.." [WARNING] at node: "..job.position.." id: "..self.me.id.." #viewCopy <= self.c")
@@ -533,14 +533,14 @@ function PSS.activeThreadSuccess(self, received)
 	
 	local currentMethod = "[PSS.ACTIVETHREADSUCCESS] - "
 	
-	if self.logDebug then
-  	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.ACTIVETHREADSUCCESS] - STARTED")
-	end
+	--if self.logDebug then
+  --	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.ACTIVETHREADSUCCESS] - STARTED")
+	--end
 	
 	self.pss_selectToKeep(self, received, "ACTIVE_THREAD")
-	if self.logDebug then
-  	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.ACTIVETHREADSUCCESS] - fire CompleteActive and end")
-	end
+	--if self.logDebug then
+  --	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.ACTIVETHREADSUCCESS] - fire CompleteActive and end")
+	--end
   events.fire('CompleteActive')
 end
 	
@@ -552,9 +552,9 @@ function PSS.getViewCopy(self)
 	self.view_lock:lock()
 	local copy = misc.dup(self.view)
 	self.view_lock:unlock()
-  if self.logDebug then
-  	self.utils:print_this_view(currentMethod.."GET_VIEW_COPY_PSS: ", copy, self.cycle_numb, self.algoId)	
-	end
+ -- if self.logDebug then
+ -- 	self.utils:print_this_view(currentMethod.."GET_VIEW_COPY_PSS: ", copy, self.cycle_numb, self.algoId)	
+ --	end
 	return copy
 
 end
@@ -563,9 +563,9 @@ end
 function PSS.getViewSnapshot(self)
 		
 		local currentMethod = "[PSS.GETVIEWSNAPSHOT] - "
-	  if self.logDebug then
-    	self.utils:print_this_view(currentMethod.."VIEW_COPY_PSS: ", self.view_copy, self.cycle_numb, self.algoId)	
-		end
+	  --if self.logDebug then
+    --	self.utils:print_this_view(currentMethod.."VIEW_COPY_PSS: ", self.view_copy, self.cycle_numb, self.algoId)	
+		--end
 		return self.view_copy
 		
 	end
@@ -579,22 +579,22 @@ function PSS.getPeer(self)
 		local peer=nil
 		
 		if #viewCopy ~= 0 then 
-			if self.logDebug then
-				log:print(currentMethod.."PSS - VIEW COPY SIZE: "..#viewCopy)
-			end
+			--if self.logDebug then
+			--	log:print(currentMethod.."PSS - VIEW COPY SIZE: "..#viewCopy)
+			--end
 			peer = viewCopy[math.random(#viewCopy)] 
-			if self.logDebug then
-				log:print(currentMethod.."PSS - GOT PEER: "..peer.id)
-			end
+			--if self.logDebug then
+			--	log:print(currentMethod.."PSS - GOT PEER: "..peer.id)
+			--end
 		else
-			 if self.logDebug then
-			 	log:print(currentMethod.."PSS - VIEW COPY size = ZERO: ")
-			 end
+			 --if self.logDebug then
+			 --	log:print(currentMethod.."PSS - VIEW COPY size = ZERO: ")
+			 --end
 		   peer = nil
 		end
 		
 	  if self.logDebug then
-    	self.utils:print_this_view(currentMethod.."PSS - VIEW_COPY_PSS: ", viewCopy, self.cycle_numb, self.algoId)	
+    	self.utils:print_this_view(currentMethod.."PSS - returning VIEW_COPY_PSS: ", viewCopy, self.cycle_numb, self.algoId)	
 		end
 
 		return peer
@@ -661,7 +661,7 @@ end
 function PSS.init(self, peerToBoot)
 	
 local currentMethod = "[PSS.INIT]"
-log:print(currentMethod.." at node: "..job.position.." - INIT START ")
+log:print(currentMethod.." at node: "..job.position.." - START ")
 
 	--	if not peerToBoot then 
 	--		log:print(currentMethod.." at node: "..job.position.." - INIT did not receive a peer to bootstrap.")
@@ -692,7 +692,7 @@ log:print(currentMethod.." at node: "..job.position.." - INIT START ")
     events.sleep(2)
   end
 
-	log:print(currentMethod.." at node: "..job.position.." - PSS INIT END")
+	log:print(currentMethod.." at node: "..job.position.." - INIT END")
   events.periodic(self.cycle_period, function() self.active_thread(self) end)
 	
 end

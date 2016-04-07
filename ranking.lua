@@ -20,20 +20,20 @@ function id_based_ring_distance(self, a, b)
  	 
  	    -- NOTE: what to do in this case, it happens in the beggining as views are spread by pss without the knowledge of payload which is a TMAN feature. 
  	    if a[1]==nil or b[1]==nil then
- 	      log:print("DIST at node: "..job.position.." id_based_ring_distance: self either a[1]==nil or b[1]==nil")
+ 	      log:warning("DIST at node: "..job.position.." id_based_ring_distance: self either a[1]==nil or b[1]==nil")
  	      -- if one of them is nill (ghost from pss) return a high distance in order to avoid them to be kept in the view.
  	      return 2^aux_parameters[1]-1
  	    end
-
-	    for k,v in pairs(a) do
-	       log:print("DIST at node: "..job.position.." self a k,v : "..k..", "..v)
-	   	end
-	   	log:print("DIST at node: "..job.position.." self a[1]: "..a[1])
+			-- debug
+	    --for k,v in pairs(a) do
+	    --   log:print("DIST at node: "..job.position.." self a k,v : "..k..", "..v)
+	   	--end
+	   	--log:print("DIST at node: "..job.position.." self a[1]: "..a[1])
 	   	
-      for k,v in pairs(b) do
-	       log:print("DIST at node: "..job.position.." self b k,v : "..k..", "..v)
-	   	end
-	  	log:print("DIST at node: "..job.position.." self b[1]: "..b[1])
+      --for k,v in pairs(b) do
+	    --   log:print("DIST at node: "..job.position.." self b k,v : "..k..", "..v)
+	   	--end
+	  	--log:print("DIST at node: "..job.position.." self b[1]: "..b[1])
 	    
 			
 			local k1 = a[1]
@@ -47,7 +47,7 @@ function id_based_ring_distance(self, a, b)
 					distance =  2^aux_parameters[1] - k1 + k2 
 			end
    		
-   		log:print("DIST at node: "..job.position.." self a[1]: "..a[1].." b[1]: "..b[1].." aux_parameters[1]"..aux_parameters[1].." distance: "..distance)
+   		--log:print("DIST at node: "..job.position.." self a[1]: "..a[1].." b[1]: "..b[1].." with aux_parameters[1]"..aux_parameters[1].." distance is: "..distance)
    		
    		return distance
 end
