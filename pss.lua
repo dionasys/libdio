@@ -497,7 +497,7 @@ function PSS.active_thread(self)
 			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." sending buffer to node: "..partner.id)
 		end
 			
-		local ok, r = Coordinator.send(self.algoId, partner, buffer)
+		Coordinator.send(self.algoId, partner, buffer, 'CompleteActive')
 		
 		events.wait('CompleteActive')
 		
@@ -580,21 +580,21 @@ function PSS.getPeer(self)
 		
 		if #viewCopy ~= 0 then 
 			if self.logDebug then
-				log:print(currentMethod.."VIEW COPY SIZE: "..#self.view_copy)
+				log:print(currentMethod.."PSS - VIEW COPY SIZE: "..#viewCopy)
 			end
 			peer = viewCopy[math.random(#viewCopy)] 
 			if self.logDebug then
-				log:print(currentMethod.."GOT PEER: "..peer.id)
+				log:print(currentMethod.."PSS - GOT PEER: "..peer.id)
 			end
 		else
 			 if self.logDebug then
-			 	log:print(currentMethod.."VIEW COPY size = ZERO: ")
+			 	log:print(currentMethod.."PSS - VIEW COPY size = ZERO: ")
 			 end
 		   peer = nil
 		end
 		
 	  if self.logDebug then
-    	self.utils:print_this_view(currentMethod.."VIEW_COPY_PSS: ", self.view_copy, self.cycle_numb, self.algoId)	
+    	self.utils:print_this_view(currentMethod.."PSS - VIEW_COPY_PSS: ", viewCopy, self.cycle_numb, self.algoId)	
 		end
 
 		return peer

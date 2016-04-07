@@ -62,6 +62,7 @@ local peerToBoot = Coordinator.bootstrap(node)
 		for _, algo in pairs(Coordinator.algos) do
 		  algo.obj:init(peerToBoot)   
 			--events.periodic(algo:getCyclePeriod(), algo:active_thread())
+			events.sleep(delay)
 		end
 --end 
  
@@ -98,7 +99,7 @@ Coordinator.passive_thread=function(algoId, from, buffer)
 
 end
 
-Coordinator.send=function(algoId, dst, buf)
+Coordinator.send=function(algoId, dst, buf, eventToFire)
 
 		local algo = nil
 	  for k,v in pairs(Coordinator.algos) do 
@@ -113,7 +114,7 @@ Coordinator.send=function(algoId, dst, buf)
 			local ok = rpc.acall(dst.peer,{"Coordinator.passive_thread", algoId, sender, buf}, timeOut)
 			if not ok then
 				log:print("[Coordinator.send] - COORDINATOR at node: "..job.position.." id: "..sender.id.." exchange with peer "..dst.id.." not completed, continuing.")
-				events.fire('CompleteActive')
+				events.fire(eventToFire)
 			end
 		else
 			log:print("[Coordinator.send] - COORDINATOR at node: "..job.position.." id: "..sender.id.." protocol "..algoId.." is not in the catalog")
@@ -160,6 +161,14 @@ end
 
 
 Coordinator.callAlgoMethod = function(algoId, method, payload, dst, srcId)
+	if aldoId then log:print("algoId is not nil") else log:print("algoID is nil") end	
+	if method then log:print("method is not nil") else log:print("method is nil ") end	
+	if payload then log:print("payload is not nil") else log:print("payload is nil") end	
+	if dst then log:print("dst is not nil ") else log:print("dst is nil ") end	
+	if srcId then log:print("srcId is not nil") else log:print("srcId is nil") end	
+
+		
+		
 	log:print("[Coordinator.CALLALGOMETHOD] - COORDINATOR at node: "..job.position.." callAlgoMethod invoked from node "..srcId.." for method: "..method.." of protocol: "..algoId)
   local ok = rpc.acall(dst, {"Coordinator.dispatch", algoId, method, payload, srcId}, 3)
   if not ok then 
