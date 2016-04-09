@@ -78,9 +78,6 @@ function TMAN.getNode(self) return self.me end
 	function TMAN.init(self, bootstrapNode)
 
 		local currentMethod = "[TMAN.INIT] - "
-		-- if self.logDebug then
-		-- 	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." STARTED")
-		-- end
 		-- look for active algo 
 		local active_algo_base = nil
 		for k,v in pairs(self.b_protocol) do
@@ -88,10 +85,6 @@ function TMAN.getNode(self) return self.me end
 				   active_algo_base = v
 				end
 		end
-		
-	--	if self.logDebug then
-	--			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." active base protocol id: "..self.b_active.." is :"..tostring(active_algo_base))
-	--	end
 
 		local peer = nil
 		local bootView = {}
@@ -115,19 +108,13 @@ function TMAN.getNode(self) return self.me end
 					local found = false
 					for k,v in ipairs(bootView) do
 						if v.peer.ip == peer.peer.ip  and v.peer.port == peer.peer.port then
-							--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." view_contains found node "..peer.id.." in the view.")
 							found = true
 						end
 					end
 				  
 					if not found then
-						log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." view does not found node: "..peer.id.." in it. adding")
 						bootView[#bootView+1] = peer
 						--self.is_init = true
-					else
-						--if self.logDebug then
-							log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." getPeer() returned already taken node: "..peer.id.." ignoring.")
-						--end
 					end
 				
 				end
@@ -142,14 +129,11 @@ function TMAN.getNode(self) return self.me end
 		
 		self.t_view_lock:lock()
 			self.t_view = bootView
+			self.utils:print_this_view("[TMAN.INIT_INI_FROM_PSS] - CURRENT TMAN_VIEW:", self.t_view, self.cycle_numb, self.algoId)
+
 		self.t_view_lock:unlock()
-		
-		
 
-			self.utils:print_this_view("CURRENT TMAN_VIEW(INIT_FROM_PSS):", bootView, self.cycle_numb, self.algoId)
 			--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." END")
-
-		
 		-- start periodic thread
 		events.periodic(self.cycle_period, function() self.active_thread(self) end)
 	end
@@ -583,105 +567,102 @@ end
 ---------------------------------------------------- 
 function TMAN.activeTMANThreadSuccess(self, received)
 	
-	local currentMethod = "[TMAN.ACTIVETMANTHREADSUCCESS] - "
+		local currentMethod = "[TMAN.ACTIVETMANTHREADSUCCESS] - "
 	
 	--if self.logDebug then
-  --	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVETHREADSUCCESS] - STARTED")
-	--end
+		--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVETHREADSUCCESS] - STARTED")
+		--end
 	
-	if self.logDebug then
+		if self.logDebug then
 			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." - received buffer invoking TMAN.UPDATE_VIEW_TO_KEEP().")
-	end
+		end
 	
-	-- self.removeDead(received)
-	self.update_view_to_keep(self, received) 
+		-- self.removeDead(received)
+		self.update_view_to_keep(self, received) 
 	
-	--if self.logDebug then
-  --	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVETHREADSUCCESS] - fire CompleteTMANActive and end")
-	--end
+		--if self.logDebug then
+			--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVETHREADSUCCESS] - fire CompleteTMANActive and end")
+			--end
 	
-  events.fire('CompleteTMANActive')
+			events.fire('CompleteTMANActive')
 end
 	
 ---------------------------------------------------- 
-	function TMAN.active_thread(self)
+function TMAN.active_thread(self)
 		
 		local currentMethod = "[TMAN.ACTIVE_THREAD] - "
 		
-		--if self.logDebug then
+	--if self.logDebug then
 		--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVE_THREAD] - STARTED")
-		self.utils:print_this_view("[TMAN.ACTIVE_THREAD_START] - CURRENT TMAN_VIEW:", self.t_view, self.cycle_numb, self.algoId)
+		--self.utils:print_this_view("[TMAN.ACTIVE_THREAD_START] - CURRENT TMAN_VIEW:", self.t_view, self.cycle_numb, self.algoId)
 		--end
 		
 		local viewCopy = self.getTViewCopy(self)
 		
 		local selected_peer = self.select_peer(self, viewCopy) 
 		if not selected_peer then 
-		  if self.logDebug then
+			if self.logDebug then
 				log:warning(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." TMAN active_thread: no selected_peer chosen") 
 			end
 			return 
 		else
-		   	--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." TMAN selected_peer: "..selected_peer.id)
+			--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." TMAN selected_peer: "..selected_peer.id)
 		end
 		
 		
 		local buffer = self.select_view_to_send(self, selected_peer.id, viewCopy)
 						
 		if self.logDebug then
-				log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." sending buffer to node: "..selected_peer.id)
+			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." sending buffer to node: "..selected_peer.id)
 		end
 			
 		Coordinator.send(self.algoId, selected_peer, buffer,'CompleteTMANActive')
 		
 		events.wait('CompleteTMANActive')
 
-		self.utils:print_this_view("[TMAN.ACTIVE_THREAD_END] - CURRENT TMAN_VIEW:", self.t_view, self.cycle_numb, self.algoId)
 		
-		self.cycle_numb = self.cycle_numb+1
+		self.t_view_lock:lock()
+			self.cycle_numb = self.cycle_numb+1
+			self.utils:print_this_view("[TMAN.ACTIVE_THREAD_END] - CURRENT TMAN_VIEW: ", self.t_view, self.cycle_numb, self.algoId)
+		self.t_view_lock:unlock()
 		
---		if self.logDebug then
---			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVE_THREAD] - END")
---		end
-	end
 
+end
 ----------------------------------------------------
 function TMAN.passive_thread(self, sender, received)
 	
+local currentMethod = "[TMAN.PASSIVE_THREAD] - "
+	
+	
+events.thread(function()
 	local currentMethod = "[TMAN.PASSIVE_THREAD] - "
-	
-	
-	events.thread(function()
-		local currentMethod = "[TMAN.PASSIVE_THREAD] - "
-		--log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." sender: "..sender.id)
+	--log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." sender: "..sender.id)
 		
-		local viewCopy = self.getTViewCopy(self)
+	local viewCopy = self.getTViewCopy(self)
 		
-		--if self.logDebug then
+	--if self.logDebug then
 		--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.PASSIVE_THREAD] - STARTED")
-		self.utils:print_this_view("[TMAN.PASSIVE_THREAD_START] - CURRENT TMAN_VIEW:", viewCopy, self.cycle_numb, self.algoId)
+		--self.utils:print_this_view("[TMAN.PASSIVE_THREAD_START] - CURRENT TMAN_VIEW:", viewCopy, self.cycle_numb, self.algoId)
 		--end
 		
---	 select to send		
+		--	 select to send
 		local buffer_to_send = self.select_view_to_send(self, sender, viewCopy)
 
 		Coordinator.callAlgoMethod(self.algoId, 'activeTMANThreadSuccess', buffer_to_send, sender, self.me.id)
 	
-	end)
+		end)
 	
-	-- select view to keep
-	-- self.removeDead(received)
-	self.update_view_to_keep(self, received)
-		
-	
-	
-	self.utils:print_this_view("[TMAN.PASSIVE_THREAD_END] - CURRENT TMAN_VIEW:", self.t_view, self.cycle_numb, self.algoId)
-	--if self.logDebug then
-	--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVE_THREAD] - END")
-	--end
+		-- select view to keep
+		-- self.removeDead(received)
+		self.update_view_to_keep(self, received)
+
+		--self.utils:print_this_view("[TMAN.PASSIVE_THREAD_END] - CURRENT TMAN_VIEW:", self.t_view, self.cycle_numb, self.algoId)
+		--if self.logDebug then
+			--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVE_THREAD] - END")
+			--end
 
 
-end
+		end
 ----------------------------------------------------
 	function TMAN.set_node_representation(self, node_rep)
 	

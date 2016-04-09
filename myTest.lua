@@ -80,7 +80,7 @@ function main()
 		--tman:setLog(true)
 		--launching protocols
 		Coordinator.showProtocols()
-		Coordinator.launch(node, 600, 0)  -- parameters: local node ref, running time in seconds, delay to start each protocol
+		Coordinator.launch(node, 660, 0)  -- parameters: local node ref, running time in seconds, delay to start each protocol
 
 end
 

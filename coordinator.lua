@@ -150,6 +150,7 @@ Coordinator.bootstrap=function(node)
 
  if job.position ~= #job.get_live_nodes() then
      local peer = job.get_live_nodes()[job.position + 1]
+		 
 		 local nodeBS = Node.new({ip=peer.ip, port=peer.port})
 		 nodeBS:setID(job.position + 1)
      return nodeBS
