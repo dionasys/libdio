@@ -7,7 +7,7 @@ JOB=$1
 NODES=$2
 CYCLES=$3
 
-if [ $# -eq 0 ]; then
+if [ $# -ne 3 ]; then
     echo "No arguments: inform job-number numb-nodes and cycles"
     exit 1
 fi

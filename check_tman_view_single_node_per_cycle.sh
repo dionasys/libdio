@@ -9,7 +9,7 @@ NODEID=$2
 CYCLES=$3
 TYPE=$4
 
-if [ $# -eq 0 ]; then
+if [ $# -ne 4 ]; then
     echo "No arguments: inform job-number node-id cycles <head/all/tail>"
     exit 1
 fi

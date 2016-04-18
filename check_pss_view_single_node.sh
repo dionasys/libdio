@@ -7,7 +7,7 @@ OUTPUT_PLOT_DIR="output_plots"
 JOB=$1
 NODEID=$2
 
-if [ $# -eq 0 ]; then
+if [ $# -ne 2 ]; then
     echo "No arguments: inform job-number node-id "
     exit 1
 fi
