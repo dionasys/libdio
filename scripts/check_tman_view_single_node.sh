@@ -23,7 +23,7 @@ if [ ! -d "$OUTPUT_DATA_DIR/$JOB" ]; then
   mkdir -p "$OUTPUT_DATA_DIR/$JOB"
 fi
 
-OUTPUT_BASE_FILE="tman_view_job_"$JOB"_node_"$node".dat"
+OUTPUT_BASE_FILE="tman_view_job_"$JOB"_node_"$NODEID".dat"
 
 if [ ! -d "$OUTPUT_DATA_DIR/$JOB" ]; then
    echo $OUTPUT_DATA_DIR/$JOB" : out put data directory does not exist, creating..."

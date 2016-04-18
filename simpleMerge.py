@@ -4,7 +4,8 @@ import os.path
 output_file = 'test_tman.lua'
 #test
 #filesToMerge = ['1.txt', '2.txt', '3.txt']
-filesToMerge = ['requirements.lua', 'coordinator.lua', 'node.lua', 'utilities.lua', 'pss.lua', 'tman.lua', 'ranking.lua', 'myTest.lua' ] 
+#filesToMerge = ['requirements.lua', 'coordinator.lua', 'node.lua', 'utilities.lua', 'pss.lua', 'tman.lua', 'ranking.lua', 'myTest.lua' ] 
+filesToMerge = ['requirements.lua', 'node.lua', 'coordinator.lua', 'utilities.lua', 'pss.lua', 'tman.lua', 'ranking.lua', 'myTest.lua' ]
 
 
 # remove output file if exists
