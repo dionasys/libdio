@@ -1,12 +1,16 @@
-import os.path
+import os.path, sys
+# this is a simple merge that is used avoid the problems with SPLAY's merger, mergers all files to a single one
+
+if len(sys.argv) == 2:
+    output_file = sys.argv[1]
+    print('merged output: ' + output_file)
+else:
+    output_file = 'test_lib.lua'
+    print('merged output: ' + output_file)
 
 
-output_file = 'test_tman.lua'
-#test
-#filesToMerge = ['1.txt', '2.txt', '3.txt']
-#filesToMerge = ['requirements.lua', 'coordinator.lua', 'node.lua', 'utilities.lua', 'pss.lua', 'tman.lua', 'ranking.lua', 'myTest.lua' ] 
+
 filesToMerge = ['requirements.lua', 'node.lua', 'coordinator.lua', 'utilities.lua', 'pss.lua', 'tman.lua', 'ranking.lua', 'myTest.lua' ]
-
 
 # remove output file if exists
 try:
