@@ -415,6 +415,10 @@ function PSS.active_thread(self)
 
 
   	local currentMethod = "[PSS.ACTIVE_THREAD] - "
+		self.view_lock:lock()
+			self.cycle_numb = self.cycle_numb+1
+		self.view_lock:unlock()
+		
   	
   	--if self.logDebug then
  	  --	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.ACTIVE_THREAD] - STARTED")
@@ -467,7 +471,7 @@ function PSS.active_thread(self)
 				v.age = v.age+1
 			end
 			-- print view	
-			self.cycle_numb = self.cycle_numb+1
+			--self.cycle_numb = self.cycle_numb+1
 			self.utils:print_this_view("[PSS.ACTIVE_THREAD_END] - CURRENT PSS_VIEW: ", self.view, self.cycle_numb, self.algoId)	
 		self.view_lock:unlock()
 

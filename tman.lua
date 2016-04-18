@@ -591,6 +591,9 @@ end
 function TMAN.active_thread(self)
 		
 		local currentMethod = "[TMAN.ACTIVE_THREAD] - "
+		self.t_view_lock:lock()
+			self.cycle_numb = self.cycle_numb+1
+		self.t_view_lock:unlock()
 		
 	--if self.logDebug then
 		--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVE_THREAD] - STARTED")
@@ -622,7 +625,7 @@ function TMAN.active_thread(self)
 
 		
 		self.t_view_lock:lock()
-			self.cycle_numb = self.cycle_numb+1
+			--self.cycle_numb = self.cycle_numb+1
 			self.utils:print_this_view("[TMAN.ACTIVE_THREAD_END] - CURRENT TMAN_VIEW: ", self.t_view, self.cycle_numb, self.algoId)
 		self.t_view_lock:unlock()
 		
