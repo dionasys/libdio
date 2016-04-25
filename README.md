@@ -2,7 +2,6 @@
 SOOC (or LIBDIO) is a library used to coordinate the construction of distributed overlays on SPLAY. This is a part of DIONASYS project. 
 
 
-
 # The API:
 * TMAN:set_distance_function(functionName):  sets the distance function used to rank nodes and create the target structure. *functionName* is the name of the function defined and implemented by the user.
 * TMAN:set_payload(nodePayload): sets the node semantic. This can be seen as node's profile, which is used to calculate the distance between nodes. For instance, in Chord this is the node id. In a topic-based clustering overlay it is the set of topic a node is interested on.  
@@ -12,6 +11,8 @@ SOOC (or LIBDIO) is a library used to coordinate the construction of distributed
 
 
 # TODO:
+* update doc.
+* update and add scripts to parse the views in the doc.
 
 # Versions:
-
+v 0.1
