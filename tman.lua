@@ -39,6 +39,7 @@ function TMAN.new(me, size, cycle_period, base_procotols, active_b_proto)
   return self
 end
 ----------------------------------------------------
+function TMAN.getView(self) return self.t_view end
 
 function TMAN.getViewSize(self) return self.s end
 
