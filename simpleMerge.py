@@ -1,16 +1,28 @@
 import os.path, sys
 # this is a simple merge that is used avoid the problems with SPLAY's merger, mergers all files to a single one
+print('Preparing module...')
+
+filesToMerge = ['required.lua', 'node.lua', 'coordinator.lua', 'utilities.lua', 'pss.lua', 'tman.lua', 'ranking.lua' ]
+
+if len(sys.argv) == 1:
+    output_file = 'libdio.lua'
+    filesToMerge.append('myTest.lua')
+    print('merging: '+ str(filesToMerge))
+    print('output: ' + output_file)
 
 if len(sys.argv) == 2:
-    output_file = sys.argv[1]
-    print('merged output: ' + output_file)
-else:
-    output_file = 'test_lib.lua'
-    print('merged output: ' + output_file)
+    filesToMerge.append(sys.argv[1])
+    output_file = 'libdio.lua'
+    print('merging: '+ str(filesToMerge))
+    print('output: ' + output_file)
+    
+if len(sys.argv) == 3:
+    filesToMerge.append(sys.argv[1])
+    output_file = sys.argv[2]
+    print('merging: '+ str(filesToMerge))
+    print('output: ' + output_file)
 
-
-
-filesToMerge = ['requirements.lua', 'node.lua', 'coordinator.lua', 'utilities.lua', 'pss.lua', 'tman.lua', 'ranking.lua', 'myTest.lua' ]
+#filesToMerge = ['required.lua', 'node.lua', 'coordinator.lua', 'utilities.lua', 'pss.lua', 'tman.lua', 'ranking.lua', 'myTest.lua' ]
 
 # remove output file if exists
 try:
@@ -30,4 +42,4 @@ for eachFile in filesToMerge:
 	finally:
 		currentFile.close
 		outFile.close
-print 'End.'		
+print 'Done.'		

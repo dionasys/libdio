@@ -1,7 +1,7 @@
 -- #################### CLASS COORDINATOR ###################################
 Coordinator={}
 Coordinator.algos={}
-Coordinator.nodenode={}
+--Coordinator.nodenode={}
 --Coordinator.initAlgos=function(confObj)
 -- For each algoId in confObj
 --end
