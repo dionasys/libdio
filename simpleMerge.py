@@ -74,7 +74,7 @@ try:
 except OSError:
 	pass
 
-#merge files in the array into a single output files 
+#merge files in the list into a single output file 
 for eachFile in filesToMerge:
 	currentFile = open(eachFile, 'r')
 	outFile = open(output_file, 'a')
