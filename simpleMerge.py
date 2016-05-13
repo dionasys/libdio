@@ -8,6 +8,12 @@ filesToMerge = ['required.lua', 'node.lua', 'coordinator.lua', 'utilities.lua', 
 stdOutput = 'libdio.lua' #std output name used if no out=yyy option is passed
 stdInput  = 'myTest.lua' #this file is the file usually used as test, many diff. tests depending on the content of myTest.lua, for user specific app the option in=xxx must be used
 
+def filenameError(inorout): 
+	print('[Wrong arguments: ' + inorout + ' filename has the same name as another file in the filesToMerge list]')
+	print('[Wrong arguments: choose another ' + inorout + ' filename. Exiting.]')
+	sys.exit()
+
+
 if len(sys.argv) > 3:
 	print('Wrong arguments: usage python simpleMerge.py [in=xxx.lua | out=yyy.lua | in=xxx.lua out=yyy.lua | out=yyy.lua in=xxx.lua]')
 
@@ -28,9 +34,7 @@ if len(sys.argv) == 2:
 		stdInput = sys.argv[1].split('=')[1]
 		# check if selected input is part of default files
 		if stdInput in filesToMerge: 
-			print('[Wrong arguments: input filename has the same name as another file in the filesToMerge list]')
-			print('[Wrong arguments: choose another input filename. Exiting.]')
-			sys.exit()
+			filenameError('input')
 		filesToMerge.append(stdInput)
 		output_file = stdOutput
 
@@ -42,20 +46,16 @@ if len(sys.argv) == 3:
 		stdInput = sys.argv[2].split('=')[1]
 		# check if selected input is part of default files
 		if stdInput in filesToMerge: 
-			print('[Wrong arguments: input filename has the same name as another file in the filesToMerge list]')
-			print('[Wrong arguments: choose another input filename. Exiting.]')
-			sys.exit()
-		
+			filenameError('input')
 		filesToMerge.append(stdInput)
+
 	# simpleMerge.py in=xxx simpleMerge.py out=xxx
 	if sys.argv[1].split('=')[0] == 'in' and sys.argv[2].split('=')[0] == 'out': 
 		print('[in and out-file passed]')
 		stdInput = sys.argv[1].split('=')[1]
 		# check if selected input is part of default files
 		if stdInput in filesToMerge: 
-			print('[Wrong arguments: input filename has the same name as another file in the filesToMerge list]')
-			print('[Wrong arguments: choose another input filename. Exiting.]')
-			sys.exit()
+			filenameError('input')
 		filesToMerge.append(stdInput)  
 		output_file = sys.argv[2].split('=')[1]
 
@@ -64,9 +64,7 @@ print('selected output: ' + output_file)
 
 # check if selected output is part of default files
 if output_file in filesToMerge: 
-	print('[Wrong arguments: output filename has the same name as another file in the filesToMerge list]')
-	print('[Wrong arguments: choose another output filename. exiting.]')
-	sys.exit()
+	filenameError('output')
 
 # remove output file if exists
 try:
