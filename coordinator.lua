@@ -41,11 +41,11 @@ Coordinator.launch=function(node, running_time, delay)
 	log:print("[Coordinator.bootstrap] - at node: "..job.position.." will bootstrap with node: "..tostring(peerToBoot.id))
 	for _, algo in pairs(Coordinator.algos) do
 	  algo.obj:init(peerToBoot)   
-		--events.periodic(algo:getCyclePeriod(), algo:active_thread())
-		events.sleep(delay)
+	--events.periodic(algo:getCyclePeriod(), algo:active_thread())
+	events.sleep(delay)
 	end
 	--end 
--- 
+
 -- 	local bootstrapPeer = Coordinator.bootstrap(node)
 -- 	log:print("COORDINATOR [launch] - at node: "..job.position.." will bootstrap with peer id: "..tostring(bootstrapPeer:getID()))
 -- 	for k, algo in pairs(Coordinator.algos) do
@@ -150,7 +150,6 @@ Coordinator.bootstrap=function(node)
 
  if job.position ~= #job.get_live_nodes() then
      local peer = job.get_live_nodes()[job.position + 1]
-		 
 		 local nodeBS = Node.new({ip=peer.ip, port=peer.port})
 		 nodeBS:setID(job.position + 1)
      return nodeBS

@@ -64,7 +64,6 @@ end
 			log:warning("self.computeID_func_params nil")
 		end
 		
-		
 		local computedID = self.computeID_func(self, ip, port, self.computeID_func_params)
 		return computedID
 		
@@ -94,9 +93,8 @@ end
 
 function Node.set_IDSpace(self, bits)
 
-			
-			self.idexpo = bits
-					
+		self.idexpo = bits
+
       local r = 0
       if bits%4 == 0 then
          r = bits/4
@@ -104,7 +102,7 @@ function Node.set_IDSpace(self, bits)
          r= bits/4 + 1
       end
       
-		 	log:print("[set_IDSpace] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  selected number of bits: "..bits.." hexa need to represent it: "..r)
+		log:print("[set_IDSpace] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  selected number of bits: "..bits.." hexa need to represent it: "..r)
       local resultHexa = string.sub(crypto.evp.new("sha1"):digest(tostring(job.me.ip)..":"..tostring(job.me.port)), 1, r)
  	 		log:print("[set_IDSpace] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  hashed(ip port) resultHexa: "..resultHexa)
       local resultNumb = tonumber(resultHexa,16)
