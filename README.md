@@ -1,4 +1,4 @@
-# SOOC: Self-Organized Overlay Construction
+# SOOC-Lib: Self-Organized Overlay Construction
 SOOC (or LIBDIO) is a library used to coordinate the construction of distributed overlays on SPLAY. This work is developed as a part of DIONASYS project. 
 
 
