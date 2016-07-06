@@ -1,5 +1,9 @@
-# ignore the directory with raw files from experiments
+# ignore the directory with raw and parsed files from experiments
 raw_outputs/
+output_data_logs/
 
 # ignore my backlog file
 mybacklog.html
+
+#ignore files ending with ~
+*~

@@ -31,5 +31,5 @@ fi
 
 > $OUTPUT_DATA_DIR/$JOB/$OUTPUT_BASE_FILE
   echo "collecting data.."
-   	cat $INPUT_DATA_DIR/$JOB | grep "CURRENT\ TMAN_VIEW" |  grep "id: $NODEID " | awk '{$1=$3=$4=$5=$7=""; print $0 }' >>  $OUTPUT_DATA_DIR/$JOB/$OUTPUT_BASE_FILE
+   	cat $INPUT_DATA_DIR/$JOB | grep "CURRENT\ TMAN_VIEW" |  grep "id: $NODEID " | awk '{$1=$3=$4=$5=$7=""; print $0 }' | sort >>  $OUTPUT_DATA_DIR/$JOB/$OUTPUT_BASE_FILE
 echo "end."
