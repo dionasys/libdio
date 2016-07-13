@@ -328,7 +328,7 @@ def getLongestRunningTime(listOfBehaviors, gossipPeriod):
 			longest = len(eachNodeLine)
 	
 	return((longest*gossipPeriod)-gossipPeriod)
-	
+###############################################################################	
 def getCumulatedScores(listofallbehaviors):
 	'''  listofallbehaviors argument is like this:  
 	[	[   0, [2, 3, 4, 6], 100.0]
@@ -341,19 +341,46 @@ def getCumulatedScores(listofallbehaviors):
 		cumulated =  { '0' : {'cumul': x , 'nodes': y, 'avg': 0}, '5' : {'cumul': w , 'nodes': z, 'avg': 0}, '10' : {'cumul': k , 'nodes': y, 'avg': 0 }
 		''' 
 		
-	cumulated = {}  #   { '1' : {'cumul': 0.0 , 'nodes': 0, 'avg': 0} }
+	cumulated = {}  #   { '1' : {'cumul': 0.0 , 'nodes': 0, 'avg': 0 , 'values': [] } }
 	for eachNodeLine in listofallbehaviors:
 		for eachTime in eachNodeLine: 
-			print(eachTime)
+			#print(eachTime)
 			if eachTime[0] not in cumulated:
-				cumulated[eachTime[0]] = {'cumul': int(eachTime[2]) , 'nodes': 1, 'avg': 0}
+				cumulated[int(eachTime[0])] = {'cumul': eachTime[2] , 'nodes': 1, 'avg': 0, 'values': [] }
+				cumulated[int(eachTime[0])]['values'].append(eachTime[2])
+				
 			else:
-				cumulated[eachTime[0]]['cumul'] = int(cumulated[eachTime[0]]['cumul']) + int(eachTime[2])
-				cumulated[eachTime[0]]['nodes'] = int(cumulated[eachTime[0]]['nodes']) + 1
-			cumulated[eachTime[0]]['avg'] = float(cumulated[eachTime[0]]['cumul']) / float(cumulated[eachTime[0]]['nodes'])
+				cumulated[int(eachTime[0])]['cumul'] = cumulated[eachTime[0]]['cumul'] + eachTime[2]
+				cumulated[int(eachTime[0])]['values'].append(eachTime[2])
+				cumulated[int(eachTime[0])]['nodes'] = cumulated[eachTime[0]]['nodes'] + 1
+				
+			
+			cumulated[int(eachTime[0])]['avg'] = float(cumulated[eachTime[0]]['cumul']) / float(cumulated[eachTime[0]]['nodes'])
+			
+	return cumulated
 
-	for k,v in sorted(cumulated.items()):
-		print(k,v)
+def getAllRetedBehaviorsByTime(listofnodes, idealviews, parseddata): 
+	''' output will be a list of all behaviors by time for each node, like this:  
+	[	[   0, [2, 3, 4, 6], 100.0]
+		[ 5.0, [2, 3, 4, 5], 100.0]
+		[10.0, [2, 3, 4, 5], 100.0]
+		[15.0, [2, 3, 4, 5], 100.0]...
+	] 
+	 ex: [ [['1', '0', 0, [2, 3, 4, 6]], ['1', '1', 5.0, [2, 3, 4, 5]], ['node1', 'cycle', time, [view]],     ] [node2] [node3]  
+	'''
+	auxListOfBehaviors = []
+
+	for node in listofnodes:
+		#print('node : ' + str(node))
+		ideal = getIdealViewOfNode(node, idealviews)
+		#print('ideal view: ' + str(ideal)) 
+		behavior = getBehaviorOfNodePerTime(node, parseddata)
+		ratedBehaviorOfNode = rateNodeBehavior(ideal, behavior)
+		#print(ratedBehaviorOfNode)
+		auxListOfBehaviors.append(ratedBehaviorOfNode)
+		
+	return(auxListOfBehaviors)
+	
 
 
 #########################################################################################
@@ -402,25 +429,20 @@ if __name__ == '__main__':
 	#print(getBehaviorOfNode(1, filesParsedData))
 	
 	#print(idealViews)
-	cumulatedScores = {}  # ex: {'5': [25, 25, 50, 75, 100 , 100 ] }   or   { '1' : {'cumul': 0.0 , 'nodes': 0, 'avg': 0}}
-	listOfBehaviors = []  # ex: [ [['1', '0', 0, [2, 3, 4, 6]], ['1', '1', 5.0, [2, 3, 4, 5]], ['node1', 'cycle', time, [view]],     ] [node2] [node3]  ]
-	
-	for node in listOfNodes:
-		#print('node : ' + str(node))
-		ideal = getIdealViewOfNode(node, idealViews)
-		#print('ideal view: ' + str(ideal)) 
-		behavior = getBehaviorOfNodePerTime(node, filesParsedData)
-		ratedBehaviorOfNode = rateNodeBehavior(ideal, behavior)
-		#print(ratedBehaviorOfNode)
-		listOfBehaviors.append(ratedBehaviorOfNode)
-	
-	
-	getCumulatedScores(listOfBehaviors)
 
+	listOfBehaviors = getAllRetedBehaviorsByTime(listOfNodes, idealViews, filesParsedData)
+	cumulatedScores = getCumulatedScores(listOfBehaviors)
+	
 	
 	#print(getShortestRunningTime(listOfBehaviors, gossipPeriod))
 	#print(getLongestRunningTime(listOfBehaviors, gossipPeriod))
-#	print(cumulatedScores)
+	print('time - avg view convergence')
+	for k,v in sorted(cumulatedScores.items()):
+		
+		print(k,v['avg'])
+	
+
+
 		
 	
 	
