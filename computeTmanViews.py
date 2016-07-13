@@ -6,7 +6,6 @@ usage:  python <script_name> <number_of_job>
 
 def listDir(currdir):
 	fileList=[]
-	#print('current dir: [' + currdir + ']')
 	for file in os.listdir(currdir):
 		if(file.endswith(".dat")):
 			fileList.append(file)
@@ -16,13 +15,10 @@ def getViewFromStringWithAge(viewString):
 	auxView = []
 	aux1 = viewString.replace('(', ' ')
 	aux2 = aux1.replace(')', ' ')
-	##print(aux2)
 	viewStringSplit = aux2.split()
-	#print(len(viewStringSplit))
 	index = 1
 	while index < len(viewStringSplit)-1:
 		item = []
-		#print(viewStringSplit[index])
 		item.append(viewStringSplit[index])
 		item.append(viewStringSplit[index+1])
 		index = index + 2
@@ -33,9 +29,7 @@ def getViewFromStringWithOutAge(viewString):
 	auxView = []
 	aux1 = viewString.replace('(', ' ')
 	aux2 = aux1.replace(')', ' ')
-	#print(aux2)
 	viewStringSplit = aux2.split()
-	#print(len(viewStringSplit))
 	index = 1
 	while index < len(viewStringSplit)-1:
 		peerId = int(viewStringSplit[index])
@@ -49,17 +43,6 @@ def getViewAtLine(lineAux):
 	viewString = lineAux[viewIndex1:viewIndex2+2]
 	currentViewAtLine = getViewFromStringWithOutAge(viewString)
 	return currentViewAtLine
-
-#def calcRatioIdealCurrent(current, ideal):
-#	found = 0
-#	idealSize = len(ideal)
-#	for eachElement in ideal:
-#		for each in current:
-#			#print(eachElement)
-#			#print(each[0])
-#			if int(each[0]) == int(eachElement):
-#				found = found + 1
-#	return(100/float(idealSize)*float(found))
 	
 def getListOfNodes(listofFiles, filenameIdentifier):
 
@@ -69,8 +52,8 @@ def getListOfNodes(listofFiles, filenameIdentifier):
 			nodeName = fileName.split('.')[0].split('_')
 			nodeId = int(nodeName[len(nodeName)-1]) 
 			expListOfNodes.append(nodeId)
-	expListOfNodes.sort
-	print('Number of nodes in this experiment: ' + str(len(expListOfNodes)) )
+	expListOfNodes.sort()
+	print('List of nodes in this experiment: ' + str((expListOfNodes)) )
 	return(expListOfNodes)
 
 def getTimeInSeconds(timeString):
@@ -79,10 +62,9 @@ def getTimeInSeconds(timeString):
 	return seconds
 
 def getFixedDataFromFile(fileName, gossipCycle):
-	''' in this case there is a fixing in the time to syncronize the events based on the cycle period
+	'''in this case there is a fixing in the time to syncronize the events based on the cycle period
+		returns a list such : [['nodeid', 'cycle', currentTime, [view List]]
 	'''
-	#print('openning file: ' + fileName )
-	# returns a list such : [['nodeid', 'cycle', currentTime, [view List]]
 	allFileData = []
 	currentFile = open(source_dir + fileName, 'r')
 	currentLine = 0
@@ -100,6 +82,7 @@ def getFixedDataFromFile(fileName, gossipCycle):
 			cycle = lineSplit[10] 
 			#print(str(isinstance(lineSplit[0], basestring)))
 			lineTime = getTimeInSeconds(lineSplit[0])
+			#print(lineTime)
 			if currentLine == 1:
 				startTime = lineTime
 				currentTime = 0
@@ -116,7 +99,8 @@ def getFixedDataFromFile(fileName, gossipCycle):
 					#print('auxtime %  gossipCycle: ' + str(auxtime%gossipCycle))
 					currentTime = auxtime + (gossipCycle - (auxtime%gossipCycle))
 				#print('cycle: ' + str(cycle) + ' lastCycle: ' + str(lastCycle))
-
+				#print('currentTime: ' + str(currentTime) + ' lastTime: ' + str(lastTime))
+				
 				jumpedCycles = (currentTime - lastTime)/gossipCycle
 				#print('calc jumped: ' + str(jumpedCycles))
 				if jumpedCycles>1:
@@ -152,56 +136,55 @@ def getFixedDataFromFile(fileName, gossipCycle):
 		currentFile.close
 	return allFileData
 
-def getExactDataFromFile(fileName):
-	'''this method gets the time as it happens in the log. 
-		by counting the difference between the start time and the time that events happened. 
-		no fixing is made. the drawback of this method is some delays can happen and the data 
-		is logged few seconds later or before.
-	''' 
-	print('openning file: ' + fileName )
-	# returns a list such : [['nodeid', 'cycle', currentTime, [view List]]
-	allFileData = []
-	currentFile = open(source_dir + fileName, 'r')
-	currentLine = 0
-	startTime = 0
+#def getExactDataFromFile(fileName):
+#	'''this method gets the time as it happens in the log. 
+#		by counting the difference between the start time and the time that events happened. 
+#		no fixing is made. the drawback of this method is some delays can happen and the data 
+#		is logged few seconds later or before.
+#		returns a list such : [['nodeid', 'cycle', currentTime, [view List]]
+#	''' 
+#	allFileData = []
+#	currentFile = open(source_dir + fileName, 'r')
+#	currentLine = 0
+#	startTime = 0
 
-	try:
-		for line in currentFile:			
-			currentLine=currentLine+1
-			viewAtLine = getViewAtLine(line)
-			lineSplit = line.split() 
-			nodeId =  lineSplit[8]
-			cycle = lineSplit[10] 
-			#print(str(isinstance(lineSplit[0], basestring)))
-			lineTime = getTimeInSeconds(lineSplit[0])
-			if currentLine == 1:
-				startTime = lineTime
-				currentTime = 0
-			else: 
-				currentTime = lineTime - startTime
+#	try:
+#		for line in currentFile:			
+#			currentLine=currentLine+1
+#			viewAtLine = getViewAtLine(line)
+#			lineSplit = line.split() 
+#			nodeId =  lineSplit[8]
+#			cycle = lineSplit[10] 
+#			lineTime = getTimeInSeconds(lineSplit[0])
+#			if currentLine == 1:
+#				startTime = lineTime
+#				currentTime = 0
+#			else: 
+#				currentTime = lineTime - startTime
 
-			linesData = []
-			linesData.append(nodeId) 
-			#linesData.append(cycle) 
-			linesData.append(currentTime)
-			linesData.append(viewAtLine)  
-			allFileData.append(linesData)
-	finally:
-		currentFile.close
-	return allFileData
+#			linesData = []
+#			linesData.append(nodeId) 
+#			#linesData.append(cycle) # it turns out that the cycle information is not that important if time is handled.
+#			linesData.append(currentTime)
+#			linesData.append(viewAtLine)  
+#			allFileData.append(linesData)
+#	finally:
+#		currentFile.close
+#	return allFileData
 
 def getDataFromAllLogFiles(listofFiles, filenameIdentifier, gossipPeriod):
 	dataFromAllFiles = []
 	for fileName in listofFiles:
 		if fileName.startswith(filenameIdentifier):
-			#name = fileName.split('.')[0].split('_')
+			#name = fileName.split('.')[0].split('_')  # this two lines would useful only if we need to id of the nodes before parsing the content of the file
 			#nodeId = int(name[len(name)-1]) 
+			
 			# parsedDataFromFile = getExactDataFromFile(fileName)
 			parsedDataFromFile = getFixedDataFromFile(fileName, gossipPeriod)
 			dataFromAllFiles.append(parsedDataFromFile)
 			
 	return(dataFromAllFiles)
-	
+#############################################################################	
 def computeIdealView(listOfAllNodes, distFunction, viewSize, mbitSpace):
 	eachRankedNodes = []
 	allRankedNodes = []
@@ -213,15 +196,6 @@ def computeIdealView(listOfAllNodes, distFunction, viewSize, mbitSpace):
 		
 	return(allRankedNodes)
 
-def getKey(item):
-	#this function is used only to help to sort another list of lists, to sort all the sublists by the second value of the lists
-	return item[1]
-
-def cropRankedListOfDistances(rankedDistances, viewSize):
-	croplist = list(rankedDistances[:viewSize])
-	return (croplist)
-
-
 def rankNode(me, listToRank, distFunction, viewSize, mbitSpace):
 	rankedDistances = []
 	for eachNode in listToRank:
@@ -232,13 +206,26 @@ def rankNode(me, listToRank, distFunction, viewSize, mbitSpace):
 	rankedDistances=list(sorted(rankedDistances, key=getKey))
 	return(cropRankedListOfDistances(rankedDistances, viewSize))
 
+def cropRankedListOfDistances(rankedDistances, viewSize):
+	croplist = list(rankedDistances[:viewSize])
+	return (croplist)
+
+def getKey(item):
+	#this function is used only to help to sort another list of lists, to sort all the sublists by the second value of the lists
+	return item[1]
+
 def clockwise_id_distance(node1, node2, mbitSpace):
 	if node1 < node2: 
 		dist=node2-node1 
 	else:
 		dist=(2**mbitSpace)-node1+node2 
 	return dist 
-	
+#############################################################################
+
+def getListOfTimesLogged(myParsedData):
+	# returns a list with all seconds where there was some logs
+	print(getTimeStats(myParsedData))
+
 def getTimeStats(myParsedData):
 	timeStats = {}
 	fullTimeList = []
@@ -248,13 +235,6 @@ def getTimeStats(myParsedData):
 	for i in fullTimeList:
 		timeStats[i] = timeStats.get(i, 0)+1
 	return timeStats
-
-def getListOfTimesLogged(myParsedData):
-	# returns a list with all seconds where there was some logs
-	print(getTimeStats(myParsedData))
-
-
-	
 	
 def printBehaviorPerNode(mylistOfNodes, myParsedData):
 	#print behavior of all nodes, separated by nodes
@@ -282,7 +262,8 @@ def getBehaviorOfNodePerTime(node, myParsedData):
 	#get the behavior of a single node, order per time logged 
 	listToRet = []
 	for eachNode in myParsedData:
-		#print(eachNode)
+		# print('node: ' + str(eachNode))
+		# print(eachNode[0][0])
 		if eachNode[0][0] == str(node):
 			for eachTime in eachNode:
 				listLine = [eachTime[2], eachTime[3]]
@@ -294,8 +275,9 @@ def getIdealViewOfNode(node, allIdealViews):
 	# eachnode in idealviews is [nodeID, [[closest_neighbor , distance], [next_closest_neighbor, distance]]]
 		if eachnode[0] == node:
 			return(eachnode[1])
-	return None 
 
+	return None 
+#########################################################################################
 def rateNodeBehavior(idealView, behavior):
 	
 	idealViewValuesOnly = []
@@ -304,12 +286,12 @@ def rateNodeBehavior(idealView, behavior):
 	# first gets only the values of an idealView (which consists of multiples [neighbor, distance] pairs)
 	for eachValue in idealView: 
 		idealViewValuesOnly.append(eachValue[0])
-	print(idealViewValuesOnly)
+
 	# for each time rates the view 	
 	for eachTime in behavior:
 		eachTime[1].sort()	
 		rate = rateView(idealViewValuesOnly, eachTime[1])
-		#print('at time: ' + str(eachTime[0]) + ' the view was: ' + str(eachTime[1]) + ' rate: ' + str(rate) )
+		#print('at time: ' + str(eachTime[0]) + ' the view was: ' + str(eachTime[1]) + ' ideal view: ' + str(idealViewValuesOnly) + ' rate: ' + str(rate) )
 		nodeBehaviorRated.append([eachTime[0], eachTime[1], rate])
 	
 	return(nodeBehaviorRated)
@@ -319,6 +301,7 @@ def rateView(ideal, currentView):
 		print('error: found ideal view size zero, while calculating the view rate at function rateView')
 		sys.exit()
 	found=0	
+	#TODO: can be implemented by means of sets and seems to be more elegant and error prone too. improve it. 
 	if len(currentView) > 0:
 		for item in ideal:
 			#print('checking item ' + str(item))
@@ -327,6 +310,53 @@ def rateView(ideal, currentView):
 	else:
 		return(0)
 	return(100/float(len(ideal))*float(found))
+
+#########################################################################################
+def getShortestRunningTime(listOfBehaviors, gossipPeriod):
+	# get the time corresponding to the node that ran the shortest experiment
+	shortest = 1000000
+	for eachNodeLine in listOfBehaviors:
+		if len(eachNodeLine) < shortest: 
+			shortest = len(eachNodeLine)
+	return((shortest*gossipPeriod)-gossipPeriod)
+
+def getLongestRunningTime(listOfBehaviors, gossipPeriod):
+	# get the time corresponding to the node that ran the longest experiment
+	longest = 0
+	for eachNodeLine in listOfBehaviors:
+		if len(eachNodeLine) > longest: 
+			longest = len(eachNodeLine)
+	
+	return((longest*gossipPeriod)-gossipPeriod)
+	
+def getCumulatedScores(listofallbehaviors):
+	'''  listofallbehaviors argument is like this:  
+	[	[   0, [2, 3, 4, 6], 100.0]
+		[ 5.0, [2, 3, 4, 5], 100.0]
+		[10.0, [2, 3, 4, 5], 100.0]
+		[15.0, [2, 3, 4, 5], 100.0]...
+	] 
+	
+		the returning value is a dictionary like this:
+		cumulated =  { '0' : {'cumul': x , 'nodes': y, 'avg': 0}, '5' : {'cumul': w , 'nodes': z, 'avg': 0}, '10' : {'cumul': k , 'nodes': y, 'avg': 0 }
+		''' 
+		
+	cumulated = {}  #   { '1' : {'cumul': 0.0 , 'nodes': 0, 'avg': 0} }
+	for eachNodeLine in listofallbehaviors:
+		for eachTime in eachNodeLine: 
+			print(eachTime)
+			if eachTime[0] not in cumulated:
+				cumulated[eachTime[0]] = {'cumul': int(eachTime[2]) , 'nodes': 1, 'avg': 0}
+			else:
+				cumulated[eachTime[0]]['cumul'] = int(cumulated[eachTime[0]]['cumul']) + int(eachTime[2])
+				cumulated[eachTime[0]]['nodes'] = int(cumulated[eachTime[0]]['nodes']) + 1
+			cumulated[eachTime[0]]['avg'] = float(cumulated[eachTime[0]]['cumul']) / float(cumulated[eachTime[0]]['nodes'])
+
+	for k,v in sorted(cumulated.items()):
+		print(k,v)
+
+
+#########################################################################################
 
 if __name__ == '__main__':
 	# check arguments
@@ -344,8 +374,9 @@ if __name__ == '__main__':
 
 	source_dir='./output_data_logs/'+JOB+'/'
 	listofFiles = listDir(source_dir)
-	listOfNodes = getListOfNodes(listofFiles, 'tman')
 	
+	listOfNodes = getListOfNodes(listofFiles, 'tman')
+
 	
 	filesParsedData = getDataFromAllLogFiles(listofFiles, 'tman', gossipPeriod)
 	idealViews = computeIdealView(listOfNodes, clockwise_id_distance, vSize, mbit)
@@ -371,24 +402,25 @@ if __name__ == '__main__':
 	#print(getBehaviorOfNode(1, filesParsedData))
 	
 	#print(idealViews)
-	cumulatedScores = {}  # ex: {'5': [25, 25, 50, 75, 100 , 100 ] }
-	for node in listOfNodes:
-		
-		ideal = getIdealViewOfNode(node, idealViews)
-		behavior = getBehaviorOfNodePerTime(node, filesParsedData)
-		print('node ' + str(node) + ' ideal view:')
-		print(len(ideal))
-		#print('node ' + str(node) + ' views by time:')
-		#print(behavior)
-		ratedBehaviorOfNode = rateNodeBehavior(ideal, behavior)
-		
-		for eachTime in ratedBehaviorOfNode: 
-			if eachTime[0] not in cumulatedScores: 
-				cumulatedScores[eachTime[0]] = eachTime[2]
-			else:
-				cumulatedScores[eachTime[0]] =+ eachTime[2]
+	cumulatedScores = {}  # ex: {'5': [25, 25, 50, 75, 100 , 100 ] }   or   { '1' : {'cumul': 0.0 , 'nodes': 0, 'avg': 0}}
+	listOfBehaviors = []  # ex: [ [['1', '0', 0, [2, 3, 4, 6]], ['1', '1', 5.0, [2, 3, 4, 5]], ['node1', 'cycle', time, [view]],     ] [node2] [node3]  ]
 	
-	print(cumulatedScores)
+	for node in listOfNodes:
+		#print('node : ' + str(node))
+		ideal = getIdealViewOfNode(node, idealViews)
+		#print('ideal view: ' + str(ideal)) 
+		behavior = getBehaviorOfNodePerTime(node, filesParsedData)
+		ratedBehaviorOfNode = rateNodeBehavior(ideal, behavior)
+		#print(ratedBehaviorOfNode)
+		listOfBehaviors.append(ratedBehaviorOfNode)
+	
+	
+	getCumulatedScores(listOfBehaviors)
+
+	
+	#print(getShortestRunningTime(listOfBehaviors, gossipPeriod))
+	#print(getLongestRunningTime(listOfBehaviors, gossipPeriod))
+#	print(cumulatedScores)
 		
 	
 	
