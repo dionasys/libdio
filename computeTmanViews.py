@@ -185,6 +185,22 @@ def getDataFromAllLogFiles(listofFiles, filenameIdentifier, gossipPeriod):
 			dataFromAllFiles.append(parsedDataFromFile)
 			
 	return(dataFromAllFiles)
+	
+def saveCumulatedScoresToFile(myScoreDic, outDir, fileName): 
+
+	filename = outDir + fileName
+	os.makedirs(os.path.dirname(filename), exist_ok=True)
+	with open(filename, "w") as myOutputFile:
+		myOutputFile.write('time - cumul- total_nodes - mean - pvariance - pstdev - mode \n')
+		for k,v in sorted(cumulatedScores.items()):	
+			#if v['nodes'] > 2 and v['cumul'] > 0:
+			myOutputFile.write(str(k) + ' ' + str(v['cumul']) + ' ' + str(v['nodes']) + ' ' + str(statistics.mean(v['values'])) + ' ' + str(statistics.variance(v['values'])) + ' ' + str(statistics.stdev(v['values'])) + '\n' )
+	
+	
+	myOutputFile.close()
+
+
+
 #############################################################################	
 def computeIdealView(listOfAllNodes, distFunction, viewSize, mbitSpace):
 	eachRankedNodes = []
@@ -392,7 +408,6 @@ def getAllRetedBehaviorsByTime(listofnodes, idealviews, parseddata):
 	
 def getRatedBehaviorsPerNode(listofnodes, idealviews, parseddata): 
 
-
 	auxListOfBehaviors = []
 
 	for node in listofnodes:
@@ -420,7 +435,6 @@ def getRatedBehaviorsPerNode(listofnodes, idealviews, parseddata):
 		auxListOfBehaviors.append([node, nodeBehaviorRated])
 	# this function is more useful for debugging strange values than for being used for other functions for the moment.
 	# commenting the returns below and just keeping the printing above. change if needed. 
-	
 	#return(auxListOfBehaviors)
 
 #########################################################################################
@@ -443,7 +457,6 @@ if __name__ == '__main__':
 	listofFiles = listDir(source_dir)
 	
 	listOfNodes = getListOfNodes(listofFiles, 'tman')
-
 	
 	filesParsedData = getDataFromAllLogFiles(listofFiles, 'tman', gossipPeriod)
 	idealViews = computeIdealView(listOfNodes, clockwise_id_distance, vSize, mbit)
@@ -476,12 +489,14 @@ if __name__ == '__main__':
 	listOfBehaviors = getAllRetedBehaviorsByTime(listOfNodes, idealViews, filesParsedData)
 	cumulatedScores = getCumulatedScoresByTime(listOfBehaviors)
 	
+	saveCumulatedScoresToFile(cumulatedScores, './plot_data/'+JOB+'/', 'tman_view_convergence_job_'+JOB+'.dat')
+	
 	#print(getShortestRunningTime(listOfBehaviors, gossipPeriod))
 	#print(getLongestRunningTime(listOfBehaviors, gossipPeriod))
 	
 	print('time - cumul- total_nodes - mean - pvariance - pstdev - mode')
 	for k,v in sorted(cumulatedScores.items()):
-#if v['nodes'] > 2 and v['cumul'] > 0:
+	#if v['nodes'] > 2 and v['cumul'] > 0:
 		print(k,v['cumul'], v['nodes'], statistics.mean(v['values']), statistics.variance(v['values']) , statistics.stdev(v['values']) )
 	
 
