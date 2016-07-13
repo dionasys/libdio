@@ -1,4 +1,5 @@
-import sys, os, string, datetime, time
+import sys, os, string, datetime, time, statistics
+# note: statistics only exists on python > v.3 
 '''
 Script to evaluate the convergence of a Structure
 usage:  python <script_name> <number_of_job>
@@ -253,21 +254,28 @@ def printBehaviorPerTime(mylistOfNodes, myParsedData):
 		print(each)
 
 def getBehaviorOfNode(node, myParsedData):
-	#get the behavior of a single node, for all the times available
+	'''  
+		get the behavior of a single node, for all the times available
+		ex: [ ['1', '0', 0, [2, 3, 4, 6]], ['1', '1', 5.0, [2, 3, 4, 5]], ['nodeid', 'cycle', time, [view]]...] 
+	'''
 	for each in myParsedData:
 		if each[0][0] == str(node):
 			return(each)
 
 def getBehaviorOfNodePerTime(node, myParsedData):
-	#get the behavior of a single node, order per time logged 
+	'''get the behavior of a single node, ordered per time logged 
+		the returned value is a list of lists, and each element corresponds to a time where there was something logged and the view at this moment
+		ex: [ [0, [2, 3, 4, 6]],  [5.0, [2, 3, 4, 5]],  [10.0, [2, 3, 4, 5]], [15.0, [2, 3, 4, 5]]....]
+	'''
 	listToRet = []
 	for eachNode in myParsedData:
-		# print('node: ' + str(eachNode))
-		# print(eachNode[0][0])
+		#print('node: ' + str(eachNode))
+		#print(eachNode[0][0])
 		if eachNode[0][0] == str(node):
 			for eachTime in eachNode:
 				listLine = [eachTime[2], eachTime[3]]
 				listToRet.append(listLine)
+	#print(listToRet)
 	return(listToRet)
 
 def getIdealViewOfNode(node, allIdealViews):
@@ -278,7 +286,7 @@ def getIdealViewOfNode(node, allIdealViews):
 
 	return None 
 #########################################################################################
-def rateNodeBehavior(idealView, behavior):
+def rateNodeBehaviorByTime(idealView, behavior):
 	
 	idealViewValuesOnly = []
 	nodeBehaviorRated = []
@@ -329,7 +337,7 @@ def getLongestRunningTime(listOfBehaviors, gossipPeriod):
 	
 	return((longest*gossipPeriod)-gossipPeriod)
 ###############################################################################	
-def getCumulatedScores(listofallbehaviors):
+def getCumulatedScoresByTime(listofallbehaviors):
 	'''  listofallbehaviors argument is like this:  
 	[	[   0, [2, 3, 4, 6], 100.0]
 		[ 5.0, [2, 3, 4, 5], 100.0]
@@ -366,7 +374,6 @@ def getAllRetedBehaviorsByTime(listofnodes, idealviews, parseddata):
 		[10.0, [2, 3, 4, 5], 100.0]
 		[15.0, [2, 3, 4, 5], 100.0]...
 	] 
-	 ex: [ [['1', '0', 0, [2, 3, 4, 6]], ['1', '1', 5.0, [2, 3, 4, 5]], ['node1', 'cycle', time, [view]],     ] [node2] [node3]  
 	'''
 	auxListOfBehaviors = []
 
@@ -375,13 +382,46 @@ def getAllRetedBehaviorsByTime(listofnodes, idealviews, parseddata):
 		ideal = getIdealViewOfNode(node, idealviews)
 		#print('ideal view: ' + str(ideal)) 
 		behavior = getBehaviorOfNodePerTime(node, parseddata)
-		ratedBehaviorOfNode = rateNodeBehavior(ideal, behavior)
+		#print(behavior)
+		ratedBehaviorOfNode = rateNodeBehaviorByTime(ideal, behavior)
 		#print(ratedBehaviorOfNode)
 		auxListOfBehaviors.append(ratedBehaviorOfNode)
 		
 	return(auxListOfBehaviors)
 	
+	
+def getRatedBehaviorsPerNode(listofnodes, idealviews, parseddata): 
 
+
+	auxListOfBehaviors = []
+
+	for node in listofnodes:
+		#print('node : ' + str(node))
+		ideal = getIdealViewOfNode(node, idealviews)
+		print('ideal view: ' + str(ideal)) 
+		behavior = getBehaviorOfNode(node, parseddata)   # ['nodeid', 'cycle', time, [view]]...] 
+
+		# rate Behavior Of Node
+		idealViewValuesOnly = []
+		# first gets only the values of an idealView (which consists of multiples [neighbor, distance] pairs)
+		for eachValue in ideal: 
+			idealViewValuesOnly.append(eachValue[0])
+
+		# for each node rates the view at each time	
+		nodeBehaviorRated = []
+		for each in behavior:
+			#print(each)
+			rate = rateView(idealViewValuesOnly, each[3])
+			print('at node ' + each[0] + ' at time: ' + str(each[2]) + ' the view was: ' + str(each[3]) + ' ideal view: ' + str(idealViewValuesOnly) + ' rate: ' + str(rate) )
+			nodeBehaviorRated.append([each[2], each[3], idealViewValuesOnly, rate])
+		
+		
+		
+		auxListOfBehaviors.append([node, nodeBehaviorRated])
+	# this function is more useful for debugging strange values than for being used for other functions for the moment.
+	# commenting the returns below and just keeping the printing above. change if needed. 
+	
+	#return(auxListOfBehaviors)
 
 #########################################################################################
 
@@ -396,7 +436,7 @@ if __name__ == '__main__':
 
 	#parameters related to the experiments
 	vSize = 4
-	mbit = 10
+	mbit = 8
 	gossipPeriod = 5 
 
 	source_dir='./output_data_logs/'+JOB+'/'
@@ -429,17 +469,20 @@ if __name__ == '__main__':
 	#print(getBehaviorOfNode(1, filesParsedData))
 	
 	#print(idealViews)
-
-	listOfBehaviors = getAllRetedBehaviorsByTime(listOfNodes, idealViews, filesParsedData)
-	cumulatedScores = getCumulatedScores(listOfBehaviors)
 	
+	# this function is useful for debugging
+	# listOfBehaviors = getRatedBehaviorsPerNode(listOfNodes, idealViews, filesParsedData)
+	
+	listOfBehaviors = getAllRetedBehaviorsByTime(listOfNodes, idealViews, filesParsedData)
+	cumulatedScores = getCumulatedScoresByTime(listOfBehaviors)
 	
 	#print(getShortestRunningTime(listOfBehaviors, gossipPeriod))
 	#print(getLongestRunningTime(listOfBehaviors, gossipPeriod))
-	print('time - avg view convergence')
+	
+	print('time - cumul- total_nodes - mean - pvariance - pstdev - mode')
 	for k,v in sorted(cumulatedScores.items()):
-		
-		print(k,v['avg'])
+#if v['nodes'] > 2 and v['cumul'] > 0:
+		print(k,v['cumul'], v['nodes'], statistics.mean(v['values']), statistics.variance(v['values']) , statistics.stdev(v['values']) )
 	
 
 
