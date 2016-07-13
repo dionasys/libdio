@@ -69,7 +69,8 @@ def getListOfNodes(listofFiles, filenameIdentifier):
 			nodeName = fileName.split('.')[0].split('_')
 			nodeId = int(nodeName[len(nodeName)-1]) 
 			expListOfNodes.append(nodeId)
-	expListOfNodes.sort()
+	expListOfNodes.sort
+	print('Number of nodes in this experiment: ' + str(len(expListOfNodes)) )
 	return(expListOfNodes)
 
 def getTimeInSeconds(timeString):
@@ -80,7 +81,7 @@ def getTimeInSeconds(timeString):
 def getFixedDataFromFile(fileName, gossipCycle):
 	''' in this case there is a fixing in the time to syncronize the events based on the cycle period
 	'''
-	print('openning file: ' + fileName )
+	#print('openning file: ' + fileName )
 	# returns a list such : [['nodeid', 'cycle', currentTime, [view List]]
 	allFileData = []
 	currentFile = open(source_dir + fileName, 'r')
@@ -104,10 +105,38 @@ def getFixedDataFromFile(fileName, gossipCycle):
 				currentTime = 0
 				lastTime = currentTime
 			else: 
-				currentTime = lineTime - startTime
-			# fixing time 
-			print('current cycle: ' + str(cycle) + ' last cycle: ' + str(lastCycle))
-			print('current time: ' + str(currentTime) + ' last time: ' + str(lastTime))
+				#currentTime = lineTime - startTime
+				auxtime = lineTime - startTime
+				if auxtime % gossipCycle == 0:
+					#if current time happens at exact gossip cycles, nothing to fix
+					#print('auxtime %  gossipCycle: ' + str(auxtime%gossipCycle))
+					currentTime = auxtime
+				else:
+					#if current time happens at out of phase with gossip cycles, must be fixed
+					#print('auxtime %  gossipCycle: ' + str(auxtime%gossipCycle))
+					currentTime = auxtime + (gossipCycle - (auxtime%gossipCycle))
+				#print('cycle: ' + str(cycle) + ' lastCycle: ' + str(lastCycle))
+
+				jumpedCycles = (currentTime - lastTime)/gossipCycle
+				#print('calc jumped: ' + str(jumpedCycles))
+				if jumpedCycles>1:
+					#print('jumped: ' + str(jumpedCycles-1))
+					for i in range(1,int(jumpedCycles)):
+						#print(i)
+						# add the number of lines missing according to the number of jumps
+						linesData = []
+						linesData.append(nodeId) 
+						linesData.append(int(lastCycle) + i)
+						linesData.append(int(lastTime) + (i*gossipCycle))
+						linesData.append([]) 
+						#print('fixing data: ') 
+						#print(linesData) 
+						#print(linesData) 
+						allFileData.append(linesData)
+					lastCycle = int(lastCycle) + int(jumpedCycles)-1
+					lastTime = int(lastTime) + ((int(jumpedCycles)-1)*gossipCycle)
+			#print('current cycle: ' + str(cycle) + ' last cycle: ' + str(lastCycle))
+			#print('current time: ' + str(currentTime) + ' last time: ' + str(lastTime))
 
 			linesData = []
 			linesData.append(nodeId) 
@@ -249,7 +278,55 @@ def getBehaviorOfNode(node, myParsedData):
 		if each[0][0] == str(node):
 			return(each)
 
+def getBehaviorOfNodePerTime(node, myParsedData):
+	#get the behavior of a single node, order per time logged 
+	listToRet = []
+	for eachNode in myParsedData:
+		#print(eachNode)
+		if eachNode[0][0] == str(node):
+			for eachTime in eachNode:
+				listLine = [eachTime[2], eachTime[3]]
+				listToRet.append(listLine)
+	return(listToRet)
 
+def getIdealViewOfNode(node, allIdealViews):
+	for eachnode in allIdealViews:
+	# eachnode in idealviews is [nodeID, [[closest_neighbor , distance], [next_closest_neighbor, distance]]]
+		if eachnode[0] == node:
+			return(eachnode[1])
+	return None 
+
+def rateNodeBehavior(idealView, behavior):
+	
+	idealViewValuesOnly = []
+	nodeBehaviorRated = []
+	
+	# first gets only the values of an idealView (which consists of multiples [neighbor, distance] pairs)
+	for eachValue in idealView: 
+		idealViewValuesOnly.append(eachValue[0])
+	print(idealViewValuesOnly)
+	# for each time rates the view 	
+	for eachTime in behavior:
+		eachTime[1].sort()	
+		rate = rateView(idealViewValuesOnly, eachTime[1])
+		#print('at time: ' + str(eachTime[0]) + ' the view was: ' + str(eachTime[1]) + ' rate: ' + str(rate) )
+		nodeBehaviorRated.append([eachTime[0], eachTime[1], rate])
+	
+	return(nodeBehaviorRated)
+
+def rateView(ideal, currentView):
+	if len(ideal)==0:
+		print('error: found ideal view size zero, while calculating the view rate at function rateView')
+		sys.exit()
+	found=0	
+	if len(currentView) > 0:
+		for item in ideal:
+			#print('checking item ' + str(item))
+			if item in currentView:
+				found = found + 1
+	else:
+		return(0)
+	return(100/float(len(ideal))*float(found))
 
 if __name__ == '__main__':
 	# check arguments
@@ -258,10 +335,10 @@ if __name__ == '__main__':
 		sys.exit()
 	else:
 		JOB = sys.argv[1]
-		print('parsing job: '+ JOB)
+		print('Evaluating job: '+ JOB)
 
 	#parameters related to the experiments
-	vSize = 5
+	vSize = 4
 	mbit = 10
 	gossipPeriod = 5 
 
@@ -269,29 +346,51 @@ if __name__ == '__main__':
 	listofFiles = listDir(source_dir)
 	listOfNodes = getListOfNodes(listofFiles, 'tman')
 	
+	
 	filesParsedData = getDataFromAllLogFiles(listofFiles, 'tman', gossipPeriod)
 	idealViews = computeIdealView(listOfNodes, clockwise_id_distance, vSize, mbit)
 	
+	# finally create a function to calculate the ratio 'current view/ideal view' at each time, for all nodes that logged at this time.
+	# the output would be something like [ at_segundo_x, total_logged_nodes , avg_of_all_ratios or comulated_ratios ] 
+	# the function should looks like something like this: calculeViewsConvergenceByTine( listOfNodes, idealViews, filesParsedData )
+	
+	
+	# print all parsed data, for all log files
 	#print(filesParsedData)
+
 	#getListOfTimesLogged(filesParsedData)
 	
+	#print the size of the ideal views
 	#print(len(idealViews))
 	#print(len(filesParsedData))
 	
+	#print the behavior of all nodes individually presented by node
 	#printBehaviorPerNode(listOfNodes, filesParsedData)
-	#print(getBehaviorOfNode(2, filesParsedData))
 	
-	#printBehaviorPerTime(listOfNodes, filesParsedData)
+	#print the behavior of a single nodes given by the first parameter
+	#print(getBehaviorOfNode(1, filesParsedData))
 	
-	#for eachnode in idealViews:
-	#	print(eachnode[1])
+	#print(idealViews)
+	cumulatedScores = {}  # ex: {'5': [25, 25, 50, 75, 100 , 100 ] }
+	for node in listOfNodes:
+		
+		ideal = getIdealViewOfNode(node, idealViews)
+		behavior = getBehaviorOfNodePerTime(node, filesParsedData)
+		print('node ' + str(node) + ' ideal view:')
+		print(len(ideal))
+		#print('node ' + str(node) + ' views by time:')
+		#print(behavior)
+		ratedBehaviorOfNode = rateNodeBehavior(ideal, behavior)
+		
+		for eachTime in ratedBehaviorOfNode: 
+			if eachTime[0] not in cumulatedScores: 
+				cumulatedScores[eachTime[0]] = eachTime[2]
+			else:
+				cumulatedScores[eachTime[0]] =+ eachTime[2]
 	
+	print(cumulatedScores)
+		
 	
 	
 		
-
-
-
-
-
-
+	
