@@ -70,7 +70,6 @@ def getFixedDataFromFile(fileName, gossipCycle):
 	currentFile = open(source_dir + fileName, 'r')
 	currentLine = 0
 	startTime = 0
-	
 	lastTime = 0
 	lastCycle = 0 
 
@@ -81,58 +80,96 @@ def getFixedDataFromFile(fileName, gossipCycle):
 			lineSplit = line.split() 
 			nodeId =  lineSplit[8]
 			cycle = lineSplit[10] 
-			#print(str(isinstance(lineSplit[0], basestring)))
 			lineTime = getTimeInSeconds(lineSplit[0])
-			#print(lineTime)
+			
+			#print('at line: ' + str(currentLine) + ' time: ' + str(lineSplit[0]) + ' corresponds to : ' + str(lineTime))
 			if currentLine == 1:
 				startTime = lineTime
 				currentTime = 0
 				lastTime = currentTime
+				#print('current line: ' + str(currentLine))
+				#print('cycle: ' + str(cycle) + ' lastCycle: ' + str(lastCycle))
+				#print('currentTime: ' + str(currentTime) + ' lastTime: ' + str(lastTime))
+
+				linesData = []
+				linesData.append(nodeId) 
+				linesData.append(cycle) 
+				linesData.append(currentTime)
+				linesData.append(viewAtLine) 
+				#print(linesData) 
+				allFileData.append(linesData)
+				lastTime = currentTime
+				lastCycle = cycle
+				
 			else: 
-				#currentTime = lineTime - startTime
 				auxtime = lineTime - startTime
+				#print('auxtime, lineTime, startTime : ' + str(auxtime) + ' ' + str(lineTime) + ' ' + str(startTime)) 
 				if auxtime % gossipCycle == 0:
 					#if current time happens at exact gossip cycles, nothing to fix
 					#print('auxtime %  gossipCycle: ' + str(auxtime%gossipCycle))
 					currentTime = auxtime
+					#print('current line: ' + str(currentLine))
+					#print('cycle: ' + str(cycle) + ' lastCycle: ' + str(lastCycle))
+					#print('currentTime: ' + str(currentTime) + ' lastTime: ' + str(lastTime))
+			
+					linesData = []
+					linesData.append(nodeId) 
+					linesData.append(cycle) 
+					linesData.append(currentTime)
+					linesData.append(viewAtLine) 
+					#print(linesData) 
+					allFileData.append(linesData)
+					lastTime = currentTime
+					lastCycle = cycle
+					
+					
 				else:
-					#if current time happens at out of phase with gossip cycles, must be fixed
+					#if current time happens at out of phase with gossip cycles, may be fixed
 					#print('auxtime %  gossipCycle: ' + str(auxtime%gossipCycle))
-					currentTime = auxtime + (gossipCycle - (auxtime%gossipCycle))
-				#print('cycle: ' + str(cycle) + ' lastCycle: ' + str(lastCycle))
-				#print('currentTime: ' + str(currentTime) + ' lastTime: ' + str(lastTime))
-				
-				jumpedCycles = (currentTime - lastTime)/gossipCycle
-				#print('calc jumped: ' + str(jumpedCycles))
-				if jumpedCycles>1:
-					#print('jumped: ' + str(jumpedCycles-1))
-					for i in range(1,int(jumpedCycles)):
-						#print(i)
-						# add the number of lines missing according to the number of jumps
+					# currentTime = auxtime + (gossipCycle - (auxtime%gossipCycle))
+					
+					#print('current line: ' + str(currentLine))
+					#print('cycle: ' + str(cycle) + ' lastCycle: ' + str(lastCycle))
+					
+
+					if int(cycle) < int(lastCycle): # churn  cycle started back to zero
+						currentTime = auxtime + (gossipCycle - (auxtime%gossipCycle))
+						jumpedIntervals = (currentTime - lastTime)/gossipCycle
+						
+						#print('jumped: ' + str(jumpedIntervals-1))
+						for i in range(1,int(jumpedIntervals)):
+							# add the number of lines missing according to the number of jumps
+							linesData = []
+							linesData.append(nodeId) 
+							linesData.append(int(lastCycle) + i)
+							linesData.append(int(lastTime) + (i*gossipCycle))
+							linesData.append([]) 
+							#print('fixing missing data: ') 
+							#print(linesData) 
+							allFileData.append(linesData)
+						#lastCycle = int(lastCycle) + int(jumpedIntervals)-1
+						lastCycle = cycle
+						lastTime = int(lastTime) + ((int(jumpedIntervals)-1)*gossipCycle)
+					else:
+						currentTime = auxtime - (auxtime%gossipCycle)
+						#currentTime = lastTime + gossipCycle
 						linesData = []
 						linesData.append(nodeId) 
-						linesData.append(int(lastCycle) + i)
-						linesData.append(int(lastTime) + (i*gossipCycle))
-						linesData.append([]) 
-						#print('fixing data: ') 
-						#print(linesData) 
+						linesData.append(cycle) 
+						linesData.append(currentTime)
+						linesData.append(viewAtLine) 
+						#print('fixing delayed data: ') 
 						#print(linesData) 
 						allFileData.append(linesData)
-					lastCycle = int(lastCycle) + int(jumpedCycles)-1
-					lastTime = int(lastTime) + ((int(jumpedCycles)-1)*gossipCycle)
+						lastTime = currentTime
+						lastCycle = cycle
+						
 			#print('current cycle: ' + str(cycle) + ' last cycle: ' + str(lastCycle))
 			#print('current time: ' + str(currentTime) + ' last time: ' + str(lastTime))
 
-			linesData = []
-			linesData.append(nodeId) 
-			linesData.append(cycle) 
-			linesData.append(currentTime)
-			linesData.append(viewAtLine) 
-			#print(linesData) 
-			allFileData.append(linesData)
-		
-			lastTime = currentTime
-			lastCycle = cycle
+
+
+
 	finally:
 		currentFile.close
 	return allFileData
@@ -484,7 +521,7 @@ if __name__ == '__main__':
 	#print(idealViews)
 	
 	# this function is useful for debugging
-	# listOfBehaviors = getRatedBehaviorsPerNode(listOfNodes, idealViews, filesParsedData)
+	#listOfBehaviors = getRatedBehaviorsPerNode(listOfNodes, idealViews, filesParsedData)
 	
 	listOfBehaviors = getAllRetedBehaviorsByTime(listOfNodes, idealViews, filesParsedData)
 	cumulatedScores = getCumulatedScoresByTime(listOfBehaviors)
@@ -494,11 +531,11 @@ if __name__ == '__main__':
 	#print(getShortestRunningTime(listOfBehaviors, gossipPeriod))
 	#print(getLongestRunningTime(listOfBehaviors, gossipPeriod))
 	
-	print('time - cumul- total_nodes - mean - pvariance - pstdev - mode')
-	for k,v in sorted(cumulatedScores.items()):
-	#if v['nodes'] > 2 and v['cumul'] > 0:
-		print(k,v['cumul'], v['nodes'], statistics.mean(v['values']), statistics.variance(v['values']) , statistics.stdev(v['values']) )
-	
+#	print('time - cumul- total_nodes - mean - pvariance - pstdev - mode')
+#	for k,v in sorted(cumulatedScores.items()):
+#	#if v['nodes'] > 2 and v['cumul'] > 0:
+#		print(k,v['cumul'], v['nodes'], statistics.mean(v['values']), statistics.variance(v['values']) , statistics.stdev(v['values']) )
+#	
 
 
 		
