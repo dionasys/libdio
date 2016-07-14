@@ -1,5 +1,5 @@
 set term postscript color eps enhanced 22
-set output "plot_convergence_churn_nochurn_jobs_130-132.eps"
+set output "cw_ring_convergence_churn_nochurn_jobs_130-132.eps"
 load "styles.inc"
 
 set style line 1 lt 1 lc rgb "#FF0000" lw 4 # red
@@ -29,5 +29,5 @@ set xrange [1:]
 set key left bottom
 
 
-plot '130/tman_view_convergence_job_130.dat' using 1:4 with lines linestyle 1 t 'job 130 - no churn' , '132/tman_view_convergence_job_132.dat' u 1:4 with lines linestyle 2 t 'job 132 - churn from 60 to 240'
+plot '../data/130/tman_view_convergence_job_130.dat' using 1:4 with lines linestyle 1 t 'job 130 - no churn' , '../data/132/tman_view_convergence_job_132.dat' u 1:4 with lines linestyle 2 t 'job 132 - churn from 60 to 240'
 
