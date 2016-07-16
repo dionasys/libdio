@@ -28,6 +28,8 @@ function PSS.new(c, h, s, fanout,cyclePeriod, selection, me)
   --self.algoId = algoId
   self.algoId=nil
   self.logDebug = false
+  
+  self.coordinator = coord
  
   self.protoName="PSS"
   
@@ -387,6 +389,7 @@ function PSS.passive_thread(self, from, buffer)
 		--end
 		-- send a callback to the sender to invoke the method activeThreadSuccess() with the selected view 'retView' 
 		Coordinator.callAlgoMethod(self.algoId, 'activeThreadSuccess', retView, from, self.me.id)
+		-- for OO implementation:  self.coordinator:callAlgoMethod(self.algoId, 'activeThreadSuccess', retView, from, self.me.id)
 		
 		
 		end)
@@ -451,8 +454,9 @@ function PSS.active_thread(self)
 		--if self.logDebug then
 		--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." sending buffer to node: "..partner.id)
 		--end
-			
+		
 		Coordinator.send(self.algoId, partner, buffer, 'CompleteActive')
+		-- for OO Implementation:  self.coordinator:send(self.algoId, partner, buffer, 'CompleteActive')
 		
 		events.wait('CompleteActive')
 		

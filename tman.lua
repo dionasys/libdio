@@ -7,7 +7,7 @@ TMAN.__index = TMAN
 --function TMAN.new(me, size, cycle_period, base_procotols, active_b_proto, algoId)
 function TMAN.new(me, size, cycle_period, base_procotols, active_b_proto)
   local self = setmetatable({}, TMAN)
-
+	
   self.utils=Utilities.new(me)
   self.t_view = {}  
 	self.t_last_view = {}
@@ -22,12 +22,14 @@ function TMAN.new(me, size, cycle_period, base_procotols, active_b_proto)
 	self.rank_func = nil
 	self.rank_extra_params={}
 	
-  self.me=me	
+	self.me=me	
 	self.s = size
 	self.cycle_period = cycle_period
 	self.algos={}
 	self.b_protocol = {}
 	self.b_active = active_b_proto
+	
+	self.coordinator=coord
  
   for i,v in pairs(base_procotols) do
 		self.b_protocol[i] = v   
@@ -604,29 +606,25 @@ function TMAN.active_thread(self)
 		local viewCopy = self.getTViewCopy(self)
 		
 		local selected_peer = self.select_peer(self, viewCopy) 
-		if not selected_peer then 
-			if self.logDebug then
-				log:warning(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." TMAN active_thread: no selected_peer chosen") 
-			end
+		if not selected_peer and self.logDebug then 
+			log:warning(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." TMAN active_thread: no selected_peer chosen") 
 			return 
-		else
+		--else
 			--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." TMAN selected_peer: "..selected_peer.id)
 		end
 		
-		
 		local buffer = self.select_view_to_send(self, selected_peer.id, viewCopy)
-						
+
 		if self.logDebug then
 			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." sending buffer to node: "..selected_peer.id)
 		end
-			
+
 		Coordinator.send(self.algoId, selected_peer, buffer,'CompleteTMANActive')
-		
+		-- for OO implementation only: self.coordinator:send(self.algoId, selected_peer, buffer,'CompleteTMANActive')
+
 		events.wait('CompleteTMANActive')
 
-		
 		self.t_view_lock:lock()
-			--self.cycle_numb = self.cycle_numb+1
 			self.utils:print_this_view("[TMAN.ACTIVE_THREAD_END] - CURRENT TMAN_VIEW: ", self.t_view, self.cycle_numb, self.algoId)
 		self.t_view_lock:unlock()
 		
@@ -653,6 +651,7 @@ events.thread(function()
 		local buffer_to_send = self.select_view_to_send(self, sender, viewCopy)
 
 		Coordinator.callAlgoMethod(self.algoId, 'activeTMANThreadSuccess', buffer_to_send, sender, self.me.id)
+		-- for OO implementation only: self.coordinator:callAlgoMethod(self.algoId, 'activeTMANThreadSuccess', buffer_to_send, sender, self.me.id)
 	
 		end)
 	

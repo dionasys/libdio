@@ -78,7 +78,7 @@ function main()
 
 --setting PSS 
 --parameters: c (view size) , h (healing), s (swappig), fanout, cyclePeriod, peer_selection_policy , me
-	local pss = PSS.new(8, 1, 1, 4, 5, "tail", node)  
+	local pss = PSS.new(node, 8, 1, 1, 4, 5, "tail")  
 	Coordinator.addProtocol("pss1", pss)
 
 --setting TMAN 

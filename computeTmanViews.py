@@ -526,7 +526,7 @@ if __name__ == '__main__':
 	listOfBehaviors = getAllRetedBehaviorsByTime(listOfNodes, idealViews, filesParsedData)
 	cumulatedScores = getCumulatedScoresByTime(listOfBehaviors)
 	
-	saveCumulatedScoresToFile(cumulatedScores, './plot_data/'+JOB+'/', 'tman_view_convergence_job_'+JOB+'.dat')
+	saveCumulatedScoresToFile(cumulatedScores, './experiments/ring_convergence/data/'+JOB+'/', 'tman_view_convergence_job_'+JOB+'.dat')
 	
 	#print(getShortestRunningTime(listOfBehaviors, gossipPeriod))
 	#print(getLongestRunningTime(listOfBehaviors, gossipPeriod))
@@ -535,11 +535,3 @@ if __name__ == '__main__':
 #	for k,v in sorted(cumulatedScores.items()):
 #	#if v['nodes'] > 2 and v['cumul'] > 0:
 #		print(k,v['cumul'], v['nodes'], statistics.mean(v['values']), statistics.variance(v['values']) , statistics.stdev(v['values']) )
-#	
-
-
-		
-	
-	
-		
-	
