@@ -135,7 +135,7 @@ Coordinator.sender=function()
 	
 		Coordinator.sender_msgs_lock:lock()
 			if #Coordinator.senderBuffer > 0 then
-				log:print(" DEBUG - [Coordinator.sender] - at node: "..job.position.." number of destinations in the senders buffer: "..#Coordinator.senderBuffer)
+				log:print(" DEBUG - [Coordinator.sender] - at node: "..job.position.." # of destinations in the SENDERS_BUFFER: "..#Coordinator.senderBuffer)
 				for k,v in pairs(Coordinator.senderBuffer) do 
 					log:print("destination: "..tostring(v.dest[1].id).." "..tostring(v.dest[1].peer.ip).."/"..tostring(v.dest[1].peer.port)..": has ".. tostring(#v.msgs).." messages ")
 					allEventsToFire = {}
@@ -256,19 +256,18 @@ Coordinator.send=function(algoId, dst, buf, eventToFire, invokingProtocolID)
 				else
 					Coordinator.totalOkMsgs=Coordinator.totalOkMsgs+1
 				end
-			end	
+			end
+			log:print("[Coordinator.send] - at node: "..job.position.." COORDINATOR at node: "..job.position.." id: "..sender.id.." TOTAL_OK_MSGS: "..Coordinator.totalOkMsgs.." TOTAL_FAILED_MSGS: "..Coordinator.totalFailedMsgs)
 		else
-			log:print("[Coordinator.send] - at node: "..job.position.." COORDINATOR at node: "..job.position.." id: "..sender.id.." protocol "..algoId.." is not in the catalog")
+			log:print("[Coordinator.send] - at node: "..job.position.." COORDINATOR at node: "..job.position.." protocol "..algoId.." is not in the catalog")
 		end
-		
-		log:print("[Coordinator.send] - at node: "..job.position.." COORDINATOR at node: "..job.position.." id: "..sender.id.." TOTAL_OK_MSGS: "..Coordinator.totalOkMsgs.." TOTAL_FAILED_MSGS: "..Coordinator.totalFailedMsgs)
-		
+
 end
 
 Coordinator.printSenderBuffer = function()
 	log:print(" DEBUG - [Coordinator.PRINTSENDERBUFFER] - at node: "..job.position.." printing invoked ")
 	if #Coordinator.senderBuffer > 0 then
-		log:print(" DEBUG - [Coordinator.PRINTSENDERBUFFER] - at node: "..job.position.." #Coordinator.senderBuffer= "..tostring(#Coordinator.senderBuffer) )
+		log:print(" DEBUG - [Coordinator.PRINTSENDERBUFFER] - at node: "..job.position.." destinations at SENDERS_BUFFER: "..tostring(#Coordinator.senderBuffer) )
 		for k,v in pairs(Coordinator.senderBuffer) do 
 				for g,h in pairs(v.msgs) do 
 					log:print(" DEBUG - [Coordinator.PRINTSENDERBUFFER] - at node: "..job.position.." destination: "..tostring(v.dest[1].id)..": "..tostring(v.dest[1].peer.ip).."/"..tostring(v.dest[1].peer.port)..": has ".. tostring(#v.msgs).." messages "..tostring(h[1]).." algoId: "..tostring(h[2]) )
