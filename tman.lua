@@ -98,10 +98,9 @@ function TMAN.getNode(self) return self.me end
 			--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." bootView size : "..#bootView )
 			peer = active_algo_base:getPeer()
 			if peer ~= nil then
-			--	if self.logDebug then
+
 				log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." getPeer() returned node: "..peer.id)
-			--	end
-				
+
 				if #bootView  == 0 then
 					--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." view_contains found view.size == 0 adding node: "..peer.id)
 					bootView[#bootView+1] = peer
@@ -139,7 +138,6 @@ function TMAN.getNode(self) return self.me end
 		
 		-- start periodic thread
 		events.periodic(self.cycle_period, function() self.active_thread(self) end)
-		
 		--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." TMAN INIT END")
 	end
 
@@ -620,8 +618,8 @@ function TMAN.active_thread(self)
 		if self.logDebug then
 			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." sending buffer to node: "..selected_peer.id)
 		end
-
-		Coordinator.send(self.algoId, selected_peer, buffer,'CompleteTMANActive')
+		log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVE_THREAD] - INVOKING Coordinator.send()")
+		Coordinator.send(self.algoId, selected_peer, buffer,'CompleteTMANActive', self.algoId)
 		-- for OO implementation only: self.coordinator:send(self.algoId, selected_peer, buffer,'CompleteTMANActive')
 
 		events.wait('CompleteTMANActive')

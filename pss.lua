@@ -454,8 +454,8 @@ function PSS.active_thread(self)
 		--if self.logDebug then
 		--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." sending buffer to node: "..partner.id)
 		--end
-		
-		Coordinator.send(self.algoId, partner, buffer, 'CompleteActive')
+		log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.ACTIVE_THREAD] - INVOKING Coordinator.send()")
+		Coordinator.send(self.algoId, partner, buffer, 'CompleteActive',  self.algoId)
 		-- for OO Implementation:  self.coordinator:send(self.algoId, partner, buffer, 'CompleteActive')
 		
 		events.wait('CompleteActive')
