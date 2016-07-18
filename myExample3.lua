@@ -15,10 +15,11 @@ function id_based_ring_cw_distance(self, a, b)
 			local distance = 0
 
 			if k1 < k2 then 
-					distance =  k2 - k1 
+				distance =  k2 - k1 
 			else 
-					distance =  2^aux_parameters[1] - k1 + k2 
+				distance =  2^aux_parameters[1] - k1 + k2 
 			end
+
 			
    		return distance
 end
@@ -37,12 +38,12 @@ function id_based_ring_ccw_distance(self, a, b)
 	local k2 = b[1]
 	local distance = 0
 
-	if k1 < k2 then 
-		distance =  2^aux_parameters[1] - k2 + k1 
+	if k1 > k2 then 
+		distance =  k1 - k2
 	else 
-		distance =  k1 - k2 
+		 distance =  2^aux_parameters[1] - k2 - k1 
 	end
-
+	--distance = (2^aux_parameters[1] + k1 - k2 ) % 2^aux_parameters[1]
 	return distance
 end
 
