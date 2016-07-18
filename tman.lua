@@ -136,9 +136,11 @@ function TMAN.getNode(self) return self.me end
 
 		self.t_view_lock:unlock()
 
-			--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." END")
+		
 		-- start periodic thread
 		events.periodic(self.cycle_period, function() self.active_thread(self) end)
+		
+		--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." TMAN INIT END")
 	end
 
 	

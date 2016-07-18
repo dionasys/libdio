@@ -616,7 +616,10 @@ function PSS.init(self, peerToBoot)
 	--log:print(currentMethod.." at node: "..job.position.." - START ")
 
 
-  if not peerToBoot then return end
+  if not peerToBoot then 
+		log:print("Didnt received peerBoot")
+		return 
+	end
 	
   self.view[#self.view + 1] = peerToBoot
 	
