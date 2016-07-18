@@ -274,6 +274,17 @@ def clockwise_id_distance(node1, node2, mbitSpace):
 	else:
 		dist=(2**mbitSpace)-node1+node2 
 	return dist 
+
+def counter_clockwise_id_distance(node1, node2, mbitSpace):
+	if node1 < node2: 
+		##dist=node2-node1
+		dist =  (2**mbitSpace) - node2 + node1  
+	else:
+		##dist=(2**mbitSpace)-node1+node2 
+		dist =  node1 - node2
+	return dist 
+
+
 #############################################################################
 
 def getListOfTimesLogged(myParsedData):
@@ -489,13 +500,14 @@ if __name__ == '__main__':
 	vSize = 4
 	mbit = 8
 	gossipPeriod = 5 
+	protocolID = 'tman2'
 
 	source_dir='./output_data_logs/'+JOB+'/'
 	listofFiles = listDir(source_dir)
 	
-	listOfNodes = getListOfNodes(listofFiles, 'tman')
+	listOfNodes = getListOfNodes(listofFiles, protocolID)
 	
-	filesParsedData = getDataFromAllLogFiles(listofFiles, 'tman', gossipPeriod)
+	filesParsedData = getDataFromAllLogFiles(listofFiles, protocolID , gossipPeriod)
 	idealViews = computeIdealView(listOfNodes, clockwise_id_distance, vSize, mbit)
 	
 	# finally create a function to calculate the ratio 'current view/ideal view' at each time, for all nodes that logged at this time.
@@ -526,7 +538,8 @@ if __name__ == '__main__':
 	listOfBehaviors = getAllRetedBehaviorsByTime(listOfNodes, idealViews, filesParsedData)
 	cumulatedScores = getCumulatedScoresByTime(listOfBehaviors)
 	
-	saveCumulatedScoresToFile(cumulatedScores, './experiments/ring_convergence/data/'+JOB+'/', 'tman_view_convergence_job_'+JOB+'.dat')
+	saveCumulatedScoresToFile(cumulatedScores, './experiments/ring_convergence/data/'+JOB+'/', protocolID+'_view_convergence_job_'+JOB+'.dat')
+	
 	
 	#print(getShortestRunningTime(listOfBehaviors, gossipPeriod))
 	#print(getLongestRunningTime(listOfBehaviors, gossipPeriod))
