@@ -273,15 +273,18 @@ def clockwise_id_distance(node1, node2, mbitSpace):
 		dist=node2-node1 
 	else:
 		dist=(2**mbitSpace)-node1+node2 
+	#dist = 	((2**mbitSpace)+node2-node1)%(2**mbitSpace)
 	return dist 
 
 def counter_clockwise_id_distance(node1, node2, mbitSpace):
-	if node1 < node2: 
-		##dist=node2-node1
-		dist =  (2**mbitSpace) - node2 + node1  
+	if node1 > node2: 
+		dist=node1-node2
+		#dist =  (2**mbitSpace) - node2 + node1  
 	else:
-		##dist=(2**mbitSpace)-node1+node2 
-		dist =  node1 - node2
+		dist=(2**mbitSpace)-node2-node1 
+		#dist =  node1 - node2
+	
+	#dist = 	((2**mbitSpace)+node1-node2)%(2**mbitSpace)
 	return dist 
 
 
@@ -508,7 +511,8 @@ if __name__ == '__main__':
 	listOfNodes = getListOfNodes(listofFiles, protocolID)
 	
 	filesParsedData = getDataFromAllLogFiles(listofFiles, protocolID , gossipPeriod)
-	idealViews = computeIdealView(listOfNodes, clockwise_id_distance, vSize, mbit)
+	#idealViews = computeIdealView(listOfNodes, clockwise_id_distance, vSize, mbit)
+	idealViews = computeIdealView(listOfNodes, counter_clockwise_id_distance, vSize, mbit)
 	
 	# finally create a function to calculate the ratio 'current view/ideal view' at each time, for all nodes that logged at this time.
 	# the output would be something like [ at_segundo_x, total_logged_nodes , avg_of_all_ratios or comulated_ratios ] 
