@@ -83,11 +83,12 @@ function main()
 
 	Coordinator.addProtocol("tman1", tman1)
 	Coordinator.addProtocol("tman2", tman2)
+	Coordinator.setPiggyBackMsgs(false)
 
 
 --launching protocols
 	Coordinator.showProtocols()
-	Coordinator.launch(node, 300, 0)  --parameters: local node ref, running time in seconds, delay to start each protocol
+	Coordinator.launch(node, 420, 0)  --parameters: local node ref, running time in seconds, delay to start each protocol
 
 end
 
