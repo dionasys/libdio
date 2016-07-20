@@ -4,9 +4,9 @@ libdio is a library used to coordinate the construction of distributed overlays 
 
 # The API:
 
-* **PSS.new(view_size, healing, swappig, fanout, cycle_period, peer_selection_policy, local_node): Instantiates an object of a peer sampling protocol (PSS).
+* **PSS.new(view_size, healing, swappig, fanout, cycle_period, peer_selection_policy, local_node)**: Instantiates an object of a peer sampling protocol (PSS).
 
-* **TMAN.new(local_node, view size, cycle_period, base_procotols, active_base_protocol, algoId): Instantiates an object of a TMAN protocol (TMAN).
+* **TMAN.new(local_node, view size, cycle_period, base_procotols, active_base_protocol, algoId)**: Instantiates an object of a TMAN protocol (TMAN).
 
 * **TMAN:set_distance_function(functionName)**: sets the distance function used to rank nodes and create the target structure. The parameter *functionName* is the name of the function defined and implemented by the user.
 
