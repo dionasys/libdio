@@ -492,8 +492,8 @@ def getRatedBehaviorsPerNode(listofnodes, idealviews, parseddata):
 
 if __name__ == '__main__':
 	# check arguments
-	if len(sys.argv) != 2:
-		print('missing parameter: job number')
+	if len(sys.argv) != 3:
+		print('missing parameter: job number , protocolID')
 		sys.exit()
 	else:
 		JOB = sys.argv[1]
@@ -503,7 +503,7 @@ if __name__ == '__main__':
 	vSize = 4
 	mbit = 8
 	gossipPeriod = 5 
-	protocolID = 'tman2'
+	protocolID = sys.argv[2] # ex:  'tman1' 'tman2'
 
 	source_dir='./output_data_logs/'+JOB+'/'
 	listofFiles = listDir(source_dir)
@@ -511,8 +511,13 @@ if __name__ == '__main__':
 	listOfNodes = getListOfNodes(listofFiles, protocolID)
 	
 	filesParsedData = getDataFromAllLogFiles(listofFiles, protocolID , gossipPeriod)
-	#idealViews = computeIdealView(listOfNodes, clockwise_id_distance, vSize, mbit)
-	idealViews = computeIdealView(listOfNodes, counter_clockwise_id_distance, vSize, mbit)
+	if protocolID=='tman1':
+		idealViews = computeIdealView(listOfNodes, clockwise_id_distance, vSize, mbit)
+	elif protocolID=='tman2':
+		idealViews = computeIdealView(listOfNodes, counter_clockwise_id_distance, vSize, mbit)
+	else:
+		print('protocolID: '+ protocolID+ ' was not recognized')
+		sys.exit()	
 	
 	# finally create a function to calculate the ratio 'current view/ideal view' at each time, for all nodes that logged at this time.
 	# the output would be something like [ at_segundo_x, total_logged_nodes , avg_of_all_ratios or comulated_ratios ] 
