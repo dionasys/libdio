@@ -14,7 +14,7 @@ set rmargin 5
 
 
 
-set title "ring created with the lib - cw function used" offset 0,-0.8
+set title "ring convergence - cw function - churn and no churn - no piggyback" offset 0,-0.8
 
 set xlabel "Time (s)" offset 0,0.3
 set ylabel "Converged Links (%)" offset 1.9,0
