@@ -21,11 +21,6 @@ libdio is a library used to coordinate the construction of distributed overlays 
 
 
 
-
-# Architeture:
-![arch_lib.png](https://bitbucket.org/repo/R6kX8y/images/247039068-arch_lib.png)
-
-
 # How to use it (examples):
 * Currently, there are current two examples available in the source code: myExample1.lua and myExample2.lua. The former creates a ring overlay by using a clockwise distance function. The latter, is an example of an topic based overlay, where nodes are clustered according to the topics they have in their profiles (payload). Here it is an basic example of how to create/deploy a simple peer sampling protocol using libdio:
 
