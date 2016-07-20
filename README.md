@@ -1,4 +1,4 @@
-# libdio: Self-Organized Overlay Construction
+# libdio: easily building self-organized overlays
 libdio is a library used to coordinate the construction of distributed overlays on SPLAY. This work is developed as a part of DIONASYS project. 
 
 
