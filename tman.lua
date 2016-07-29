@@ -6,10 +6,10 @@ TMAN.__index = TMAN
 
 --function TMAN.new(me, size, cycle_period, base_procotols, active_b_proto, algoId)
 function TMAN.new(me, size, cycle_period, base_procotols, active_b_proto)
-  local self = setmetatable({}, TMAN)
+	local self = setmetatable({}, TMAN)
 	
-  self.utils=Utilities.new(me)
-  self.t_view = {}  
+	self.utils=Utilities.new(me)
+	self.t_view = {}  
 	self.t_last_view = {}
 	self.t_last_view_as_string = ""
 	self.view_stable_info = false
@@ -19,8 +19,19 @@ function TMAN.new(me, size, cycle_period, base_procotols, active_b_proto)
 	self.ongoing_rpc = false
 	self.is_init = false
 	self.cycle_numb = 0
+	
 	self.rank_func = nil
-	self.rank_extra_params={}
+	self.rank_extra_params=nil
+	
+	self.rank_func_hash = nil
+	self.last1_rank_func_hash = nil
+	self.last2_rank_func_hash = nil
+	
+	self.last1_rank_extra_params = nil
+	self.last2_rank_extra_params = nil
+	
+	self.rank_func_lock = events.lock()
+	self.rank_extra_params_lock = events.lock()
 	
 	self.me=me	
 	self.s = size
@@ -31,16 +42,19 @@ function TMAN.new(me, size, cycle_period, base_procotols, active_b_proto)
 	
 	self.coordinator=coord
  
-  for i,v in pairs(base_procotols) do
+	for i,v in pairs(base_procotols) do
 		self.b_protocol[i] = v   
-  end
-  self.logDebug = false
-  self.protoName="TMAN"
+	end
+	self.logDebug = false
+	self.protoName="TMAN"
 	--self.algoId = algoId
 	self.algoId = nil
   return self
 end
 ----------------------------------------------------
+function TMAN.compute_hash(o) return string.sub(crypto.evp.new("sha1"):digest(o), 1, 32) end
+
+
 function TMAN.getView(self) return self.t_view end
 
 function TMAN.getViewSize(self) return self.s end
@@ -341,51 +355,86 @@ function TMAN.getNode(self) return self.me end
 	end
 ----------------------------------------------------
 	function TMAN.set_distance_function(self, f)
-		self.rank_func = f
+
+		log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." distance Func: "..tostring(f))
+
+		self.rank_func_lock:lock()
+			if self.rank_func_hash == nil and self.last1_rank_func_hash == nil  and self.last2_rank_func_hash == nil then 
+				log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." add new DF ")
+				local initialHash = self.compute_hash(string.dump(f))
+				log:print("DEBUG DF_SET, at node: "..job.position.." id: "..self.me.id.." received initialHash hash: "..tostring(initialHash))
+				self.rank_func = f
+				self.rank_func_hash = initialHash
+				self.last1_rank_func_hash = initialHash
+				self.last2_rank_func_hash = initialHash
+			else
+				local receivedFuncHash = self.compute_hash(string.dump(f))
+				if receivedFuncHash ~= self.rank_func_hash and receivedFuncHash ~= self.last1_rank_func_hash and receivedFuncHash ~= self.last2_rank_func_hash then
+					log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." changing DF ")
+					log:print("DEBUG DF_SET, at node: "..job.position.." id: "..self.me.id.." current hash: "..tostring(self.rank_func_hash))
+					log:print("DEBUG DF_SET, at node: "..job.position.." id: "..self.me.id.." received Func hash: "..tostring(receivedFuncHash))
+					
+					self.last2_rank_func_hash = self.last1_rank_func_hash
+					self.last2_rank_func_hash = self.rank_func_hash 
+					self.rank_func_hash = receivedFuncHash
+					self.rank_func = f 
+				else
+					log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." DF_SET already known ")
+				end
+			end
+
+			log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." distance Func: "..tostring(self.rank_func))
+			log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." current Func Hash: "..tostring(self.rank_func_hash))
+			log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." Last1 Func Hash: "..tostring(self.last1_rank_func_hash))
+			log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." Last2 Func Hash: "..tostring(self.last2_rank_func_hash))
+		self.rank_func_lock:unlock()
+
 	end
 ----------------------------------------------------
-	function TMAN.set_distance_function(self, f, args)
-	 	self.rank_extra_params = args
-		self.rank_func = f
-	end
+--	function TMAN.set_distance_function(self, f, args)
+--	 	self.rank_extra_params = args
+--		self.rank_func = f
+--		--log:print("DEBUG SET , at node: "..job.position.." id: "..self.me.id.." distance Func: "..tostring(self.rank_func))
+--	end
 	
+	function TMAN.get_distance_function(self)
+		--log:print("DEBUG GET DistanceFunction() : at node: "..job.position.." id: "..self.me.id.." distance Func: "..tostring(self.rank_func))
+		return self.rank_func
+	end
 ----------------------------------------------------
 	function TMAN.set_distFunc_extraParams(self, args)
-	
-	  if self==nil then
-	    log:warning("at node: "..job.position.." id: "..self.me.id.." self nil")
-			--else
-	   --log:print("at node: "..job.position.." id: "..self.me.id.." self not nil")
-	    --log:print("at node: "..job.position.." id: "..self.me.id.." self "..tostring(self))
-	  end
-	  
-	 	self.rank_extra_params = args
-	  --log:print("aux setting rank extra param: "..self.rank_extra_params[1])
+	 	--self.rank_extra_params = args
+	 	log:print("DEBUG EXTRAPAR SETTING , at node: "..job.position.." id: "..self.me.id.." EXTRAPAR : "..tostring(args))
+
+		self.rank_extra_params_lock:lock()
+			if self.rank_extra_params == nil and self.last1_rank_extra_params == nil  and self.last2_rank_extra_params == nil then 
+				log:print("DEBUG EXTRAPAR_SET , at node: "..job.position.." id: "..self.me.id.." all nil add first EXTRAPAR ")
+				self.rank_extra_params = args
+			else
+				if not misc.equal(args, self.rank_extra_params) and not misc.equal(args, self.last1_rank_extra_params) and not misc.equal(args, self.last2_rank_extra_params) then
+					--change 
+					log:print("DEBUG EXTRAPAR_SET , at node: "..job.position.." id: "..self.me.id.." changing EXTRAPAR ")
+					self.last2_rank_extra_params = self.last1_rank_extra_params
+					self.last1_rank_extra_params= self.rank_extra_params 
+					self.rank_func_hash = receivedFuncHash
+					self.rank_extra_params = args 
+				else
+					log:print("DEBUG EXTRAPAR_SET , at node: "..job.position.." id: "..self.me.id.." EXTRAPAR already known ")
+				end
+			end
+
+			log:print("DEBUG EXTRAPAR_SET , at node: "..job.position.." id: "..self.me.id.." current EXTRAPAR: "..tostring(self.rank_extra_params))
+			log:print("DEBUG EXTRAPAR_SET , at node: "..job.position.." id: "..self.me.id.." Last1 EXTRAPAR: "..tostring(self.last1_rank_extra_params))
+			log:print("DEBUG EXTRAPAR_SET , at node: "..job.position.." id: "..self.me.id.." Last2 EXTRAPAR: "..tostring(self.last1_rank_extra_params))
+		self.rank_extra_params_lock:unlock()
+	 	
 	end
 ----------------------------------------------------
 	function TMAN.get_distFunc_extraParams(self)
-	
-	  if self==nil then
-	    log:warning("at node: "..job.position.." id: "..self.me.id.." self nil")
-			--else
-	    --log:print("at node: "..job.position.." id: "..self.me.id.." self notl nil:  "..tostring(self))
-
-	  end
-	 
-	 
-	  
-	  if self.rank_extra_params==nil then
-	    log:warning("at node: "..job.position.." id: "..self.me.id.." self .rank_extra_params nil")
-			--else
-	   -- log:print("at node: "..job.position.." id: "..self.me.id.." self .rank_extra_params not nil self: "..tostring(self))
-	  end
-	   
-
 	   --for k,v in pairs(self.rank_extra_params) do
 	   --    log:print("at node: "..job.position.." id: "..self.me.id.." self  k,v : "..k..", "..v)
 	   --end
-	   
-	   
+	   --log:print("DEBUG  distFunc_extraParams() : at node: "..job.position.." id: "..self.me.id.." distance Func: "..tostring(self.rank_extra_params))
 	 	return self.rank_extra_params 
 	end
 ----------------------------------------------------
@@ -579,9 +628,46 @@ function TMAN.activeTMANThreadSuccess(self, received)
 		if self.logDebug then
 			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." - received buffer invoking TMAN.UPDATE_VIEW_TO_KEEP().")
 		end
+		
+		-- test adaptation 
+		-- if received new function update locally
+		if received == nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received is nil ")
+		else
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received is not nil - received size is: "..tostring(#received))
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received: "..tostring(received))
+		end
+
+		-- just test value
+		if received[1] ~= nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[1] not nil")
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[1]: "..tostring(received[1]))
+		else
+			log:print("DEBUG : passive thread -received[1] is nil")
+		end
+		
+		-- if received new function update locally
+		if received[2] ~= nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[2] not nil")
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[2]: "..tostring(received[2]))
+			local curFunction = assert(loadstring(received[2]))
+			self.set_distance_function(self, curFunction)
+		else
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread -received[2] is nil")
+		end
+		
+		if received[3] ~= nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[3] not nil ")
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[3]: "..tostring(received[3]))
+			self.set_distFunc_extraParams(self, received[3])
+		else
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[3] is nil ")
+		end
 	
 		-- self.removeDead(received)
-		self.update_view_to_keep(self, received) 
+		-- comment to test adaptation 
+		-- self.update_view_to_keep(self, received)
+		self.update_view_to_keep(self, received[1])  
 	
 		--if self.logDebug then
 			--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVETHREADSUCCESS] - fire CompleteTMANActive and end")
@@ -599,7 +685,7 @@ function TMAN.active_thread(self)
 		self.t_view_lock:unlock()
 		
 	--if self.logDebug then
-		--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVE_THREAD] - STARTED")
+			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVE_THREAD] - STARTED")
 		--self.utils:print_this_view("[TMAN.ACTIVE_THREAD_START] - CURRENT TMAN_VIEW:", self.t_view, self.cycle_numb, self.algoId)
 		--end
 		
@@ -609,17 +695,55 @@ function TMAN.active_thread(self)
 		if not selected_peer and self.logDebug then 
 			log:warning(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." TMAN active_thread: no selected_peer chosen") 
 			return 
-		--else
-			--log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." TMAN selected_peer: "..selected_peer.id)
 		end
 		
 		local buffer = self.select_view_to_send(self, selected_peer.id, viewCopy)
 
-		if self.logDebug then
-			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." sending buffer to node: "..selected_peer.id)
-		end
+		--if self.logDebug then
+		log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." sending buffer to node: "..selected_peer.id)
+		--end
 		log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVE_THREAD] - INVOKING Coordinator.send()")
-		Coordinator.send(self.algoId, selected_peer, buffer,'CompleteTMANActive', self.algoId)
+		
+		-- test adaptation 
+		--local funcToSend = string.dump(self.rank_func)
+		local funcToSend = string.dump(self.get_distance_function(self))		
+		
+		--local funcToSend = self.get_distance_function(self)
+		if funcToSend == nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : active thread - funcToSend is nil")
+		end
+		
+		local funcPar =  self.get_distFunc_extraParams(self)
+		if funcPar == nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : active thread - funcPar is nil")
+		end
+		
+		
+		if funcToSend ~= nil and funcPar ~= nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : active thread - neither funcToSend nor funcPar are nil")
+			log:print(currentMethod.." node: "..job.position.." DEBUG : active thread - buffer to send: "..tostring(buffer))
+			log:print(currentMethod.." node: "..job.position.." DEBUG : active thread - funcToSend: "..tostring(funcToSend))
+			log:print(currentMethod.." node: "..job.position.." DEBUG : active thread - funcPar "..tostring(funcPar))
+			
+			buffer_function = {buffer, funcToSend , funcPar}
+		end
+		
+		if buffer_function == nil  then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : active thread - buffer_function is nil")
+		else 
+			log:print(currentMethod.." node: "..job.position.." DEBUG : active thread - buffer_function is not nil, "..tostring(buffer_function).." size: "..tostring(#buffer_function))
+			
+			log:print(currentMethod.." node: "..job.position.." DEBUG : active thread - buffer_function[1]-buffer: "..tostring(buffer_function[1]) )
+			log:print(currentMethod.." node: "..job.position.." DEBUG : active thread - buffer_function[2]-funcToSend:  "..tostring(buffer_function[2]) )
+			log:print(currentMethod.." node: "..job.position.." DEBUG : active thread - buffer_function[3]-funcPar: "..tostring(buffer_function[3]) )
+			
+			Coordinator.send(self.algoId, selected_peer, buffer_function,'CompleteTMANActive', self.algoId)
+		end
+		
+		
+		--original commented to test adaptation 
+		--Coordinator.send(self.algoId, selected_peer, buffer,'CompleteTMANActive', self.algoId)
+
 		-- for OO implementation only: self.coordinator:send(self.algoId, selected_peer, buffer,'CompleteTMANActive')
 
 		events.wait('CompleteTMANActive')
@@ -638,27 +762,97 @@ local currentMethod = "[TMAN.PASSIVE_THREAD] - "
 	
 events.thread(function()
 	local currentMethod = "[TMAN.PASSIVE_THREAD] - "
-	--log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." sender: "..sender.id)
+	log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." sender: "..sender.id)
 		
 	local viewCopy = self.getTViewCopy(self)
 		
 	--if self.logDebug then
 		--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.PASSIVE_THREAD] - STARTED")
-		--self.utils:print_this_view("[TMAN.PASSIVE_THREAD_START] - CURRENT TMAN_VIEW:", viewCopy, self.cycle_numb, self.algoId)
 		--end
 		
 		--	 select to send
 		local buffer_to_send = self.select_view_to_send(self, sender, viewCopy)
+		
+		
+		-- test adaptation 
+		if received == nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received is nil ")
+		else
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received is not nil - received size is: "..tostring(#received))
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received: "..tostring(received))
+		end
+		
+		local adapt_buffer_function_to_send = {}
+		
+		-- just test value
+		if received[1] ~= nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[1] not nil")
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[1]: "..tostring(received[1]))
+		else
+			log:print("DEBUG : passive thread -received[1] is nil")
+		end
+		
+		-- if received new function update locally  -- 
+		-- TODO handle the change of the function considering that after changing the node can receive the older again
+		if received[2] ~= nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[2] not nil")
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[2]: "..tostring(received[2]))
+			local curFunction = assert(loadstring(received[2]))
+			self.set_distance_function(self, curFunction)
+		else
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread -received[2] is nil")
+		end
+		
+		if received[3] ~= nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[3] not nil ")
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[3]: "..tostring(received[3]))
+			self.set_distFunc_extraParams(self, received[3])
+		else
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[3] is nil ")
+		end
+		
 
-		Coordinator.callAlgoMethod(self.algoId, 'activeTMANThreadSuccess', buffer_to_send, sender, self.me.id)
+		
+		
+		-- prepare to send local function
+		--local funcToSend = string.dump(self.rank_func)
+		local funcToSend = string.dump(self.get_distance_function(self))
+		
+		--local funcToSend = self.get_distance_function(self)
+		if funcToSend == nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : active thread - funcToSend is nil")
+		end
+
+		local funcPar =  self.get_distFunc_extraParams(self)
+		if funcPar == nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : active thread - funcPar is nil")
+		end
+
+		if funcToSend == nil or funcPar == nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - funcToSend or funcPar are nil")	
+
+		else 
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - distFunc or funcPar are NOT nil")
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - distFunc: "..tostring(distFunc).." funcPar "..tostring(funcPar).." buffer to send: "..tostring(buffer_to_send))
+			adapt_buffer_function_to_send = {buffer_to_send, funcToSend , funcPar}
+			
+			Coordinator.callAlgoMethod(self.algoId, 'activeTMANThreadSuccess', adapt_buffer_function_to_send, sender, self.me.id)
+		end
+		
+		-- commented to test adaptation
+		-- Coordinator.callAlgoMethod(self.algoId, 'activeTMANThreadSuccess', buffer_to_send, sender, self.me.id)
+		
 		-- for OO implementation only: self.coordinator:callAlgoMethod(self.algoId, 'activeTMANThreadSuccess', buffer_to_send, sender, self.me.id)
 	
 		end)
 	
 		-- select view to keep
 		-- self.removeDead(received)
-		self.update_view_to_keep(self, received)
-
+		
+		-- commented to test adaptation
+		-- self.update_view_to_keep(self, received)
+		self.update_view_to_keep(self, received[1])
+		
 		--self.utils:print_this_view("[TMAN.PASSIVE_THREAD_END] - CURRENT TMAN_VIEW:", self.t_view, self.cycle_numb, self.algoId)
 		--if self.logDebug then
 			--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVE_THREAD] - END")
