@@ -1,9 +1,8 @@
 function id_based_ring_cw_distance(self, a, b)
 
 	     local aux_parameters = self:get_distFunc_extraParams()
-
 			if a[1]==nil or b[1]==nil then
-				log:warning("DIST at node: "..job.position.." id_based_ring_distance: self either a[1]==nil or b[1]==nil")
+				--log:warning("DIST at node: "..job.position.." id_based_ring_distance: self either a[1]==nil or b[1]==nil")
 				return 2^aux_parameters[1]-1
 			end
 			
@@ -18,8 +17,7 @@ function id_based_ring_cw_distance(self, a, b)
 			end
 			
    		return distance
-end
-
+end 
 
 function main()
 	
@@ -49,7 +47,6 @@ function main()
 --launching protocols
 	Coordinator.showProtocols()
 	Coordinator.launch(node, 300, 0)  --parameters: local node ref, running time in seconds, delay to start each protocol
-
 end
 
 events.thread(main)

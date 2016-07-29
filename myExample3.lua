@@ -26,7 +26,7 @@ end
 
 
 function id_based_ring_ccw_distance(self, a, b)
---TODO: check this function again:  node: 12 id: 12 cycle: 37 view(#4): [ 9(0) 10(2) 11(2) 12(1) ]
+
 	local aux_parameters = self:get_distFunc_extraParams()
 
 	if a[1]==nil or b[1]==nil then
