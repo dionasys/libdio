@@ -7,3 +7,5 @@ mybacklog.html
 
 #ignore files ending with ~
 *~
+
+*.eps
