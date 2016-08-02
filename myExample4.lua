@@ -82,8 +82,8 @@ function main()
 	
 	--event to change the distance function after a time: 
 	if job.position == 1 then 
-		log:print("APP at node: "..job.position.." id: "..node:getID().." scheduling thread to change distance function")
-		events.thread(function() events.sleep(120) log:print("APP at node: "..job.position.." changing function to ccw!") tman1:set_distance_function(id_based_ring_ccw_distance) end)
+		log:print("DEBUG DF_SET at node "..job.position.." id: "..node:getID().." scheduling thread to change distance function")
+		events.thread(function() events.sleep(120) log:print("DEBUG DF_SET at node "..job.position.." changing function to ccw!") tman1:set_distance_function(id_based_ring_ccw_distance) end)
 	end
 
 end
