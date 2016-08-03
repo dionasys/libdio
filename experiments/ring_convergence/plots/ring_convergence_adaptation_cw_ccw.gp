@@ -42,5 +42,5 @@ set label "function \n replaced" left at 72,54 front font ",16"
 
 #plot '../data/331/tman1_view_convergence_job_331_cw.dat' using 1:4 with lines linestyle 1 t 'initial function cw' , '../data/331/tman1_view_convergence_job_331_ccw.dat' u 1:4 with lines linestyle 2 t 'replacing function ccw'
 
-plot '../data/339/tman1_view_convergence_job_339_cw.dat' using 1:4 with lines linestyle 1 t 'initial function cw' , '../data/339/tman1_view_convergence_job_339_ccw.dat' u 1:4 with lines linestyle 2 t 'replacing function ccw',  '../data/339/computed_function_propagation_339.dat' u 2:6 with lines linestyle 300 t 'function dissemination'
+plot '../data/339/tman1_view_convergence_job_339_cw.dat' using 1:4 with lines linestyle 1 t 'initial function cw' , '../data/339/tman1_view_convergence_job_339_ccw.dat' u 1:4 with lines linestyle 2 t 'replacing function ccw',  '../data/339/computed_function_propagation_339.dat' u 2:6 with lines linestyle 23 t 'function dissemination'
 

@@ -1,24 +1,26 @@
-#set style line 1 lt 1 lw 8
-#set style line 2 lt 3 lw 8
-#set style line 3 lt 1 lw 2
-#set style line 4 lt 3 lw 2
-#set style line 5 lt 0 lw 8
-#set style line 6 lt 0 lw 4
+set style line 1 lt 1 lw 8
+set style line 2 lt 3 lw 8
+set style line 3 lt 1 lw 2
+set style line 4 lt 3 lw 2
+set style line 5 lt 0 lw 8
+set style line 6 lt 0 lw 4
 
 
 #FIGS 1-4  PSS variants: blind,healer,swapper,mix
 set pointsize 2
-set style line 1 lt 1 lc rgb "red" lw 4 pt 9 ps 1
-set style line 2 lt 2 lc rgb "green" lw 4 pt 11 ps 1
-set style line 3 lt 3 lc rgb "blue" lw 4 pt 13 ps 1
-set style line 4 lt 4 lc rgb "black" lw 4 pt 8 ps 1.8
+set style line 21 lt 1 lc rgb "red" lw 4 pt 9 ps 1
+set style line 22 lt 2 lc rgb "green" lw 4 pt 11 ps 1
+set style line 23 lt 3 lc rgb "blue" lw 2 pt 13 ps 1
+set style line 24 lt 4 lc rgb "black" lw 4 pt 8 ps 1.8
 
-set style line 5 lt 2 lc rgb "black" lw 4 pt 10 ps 1.8
-set style line 6 lt 2 lc rgb "black" lw 4 pt 12 ps 2
+set style line 25 lt 2 lc rgb "black" lw 4 pt 10 ps 1.8
+set style line 26 lt 2 lc rgb "black" lw 4 pt 12 ps 2
 
-set style line 7 lt 1 lc rgb "black" lw 4 pt 6 ps 1.8
-set style line 8 lt 1 lc rgb "black" lw 4 pt 3 ps 1.8
-set style line 9 lt 2 lc rgb "black" lw 4 pt 4 ps 1.5
+set style line 27 lt 1 lc rgb "black" lw 4 pt 6 ps 1.8
+set style line 28 lt 1 lc rgb "black" lw 4 pt 3 ps 1.8
+set style line 29 lt 2 lc rgb "black" lw 4 pt 4 ps 1.5
+
+set style line 30 lt 3 lc rgb "#0000FF" lw 2 pt 13 ps 1
 
 #set style line 8 lt 3 lw 2 pt 6
 #set style line 9 lt 0 lw 2 pt 12
@@ -49,7 +51,7 @@ set style line 105 lt 1 lc rgb "#404040" lw 1 pt 9 ps 2
 set style line 125 lt 1 lc rgb "#595959" lw 1 pt 9 ps 2 
 set style line 150 lt 1 lc rgb "#808080" lw 1 pt 9 ps 2 
 set style line 175 lt 1 lc rgb "#A6A6A6" lw 1 pt 9 ps 2 
-set style line 190 lt 1 lc rgb "#D9D9D9" lw 1 pt 9 ps 2 
+set style line 190 lt 1 lc rgb "#D9D9D9" lw 1 pt 9 ps 2 # grey 
 
 set style line 101 lt 1 lc rgb "black" lw 2
 set style line 102 lt 1 lc rgb "black" lw 6
@@ -61,10 +63,10 @@ set style line 200 lt 21 lc rgb "black" lw 2
 
 
 # DASHED LINE STYLES
-#set style line 300  linewidth 1.000 pointtype 2 dashtype 1 pointsize default pointinterval 0
-#set style line 301  linewidth 2.000 pointtype 2 dashtype 2 pointsize default pointinterval 0
-#set style line 302  linewidth 2.000 pointtype 2 dashtype 4 pointsize default pointinterval 0
-#set style line 303  linewidth 2.000 pointtype 2 dashtype 5 pointsize default pointinterval 0
-#set style line 304  linewidth 2.000 pointtype 2 dashtype 6 pointsize default pointinterval 0
-#set style line 305  linewidth 2.000 pointtype 2 dashtype 7 pointsize default pointinterval 0
-#set style line 306  linewidth 2.000 pointtype 2 dashtype 8 pointsize default pointinterval 0
+set style line 300  linewidth 1.000 pointtype 2 dashtype 1 pointsize default pointinterval 0
+set style line 301  linewidth 2.000 pointtype 2 dashtype 2 pointsize default pointinterval 0
+set style line 302  linewidth 2.000 pointtype 2 dashtype 4 pointsize default pointinterval 0
+set style line 303  linewidth 2.000 pointtype 2 dashtype 5 pointsize default pointinterval 0
+set style line 304  linewidth 2.000 pointtype 2 dashtype 6 pointsize default pointinterval 0
+set style line 305  linewidth 2.000 pointtype 2 dashtype 7 pointsize default pointinterval 0
+set style line 306  linewidth 2.000 pointtype 2 dashtype 8 pointsize default pointinterval 0
