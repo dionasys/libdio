@@ -1,4 +1,5 @@
 # libdio: easily building self-organized overlays
+
 libdio is a library used to coordinate the construction of distributed overlays on SPLAY. This work is developed as a part of DIONASYS project. 
 
 
@@ -21,39 +22,202 @@ libdio is a library used to coordinate the construction of distributed overlays 
 
 
 
-# How to use it (examples):
-* Currently, there are current two examples available in the source code: myExample1.lua and myExample2.lua. The former creates a ring overlay by using a clockwise distance function. The latter, is an example of an topic based overlay, where nodes are clustered according to the topics they have in their profiles (payload). Here it is an basic example of how to create/deploy a simple peer sampling protocol using libdio:
+# How to use it (by examples):
+
+Currently, there are current few examples available in the source code showing how to use libdio in order to build overlay topologies. 
+
+Lets check some of these examples : 
+
+* myPSSExample.lua: this example show how to run a Peer Sampling Service (PSS) using libdio. As we can see in this example, we start by instantiating a node, 
+
 
 
 ```
 #!lua
 
-function main()
+function main()		
+		
+	local node = Node.new(job.me) 
+	log:print("APP START - node: "..job.position.." id: "..node:getID().." ip/port: ["..node:getIP()..":"..node:getPort().."]")
+
+	--setting PSS 
+	--parameters: c(view size), h(healing), s(swappig), fanout, cyclePeriod, peer_selection_policy, node_ref 
 	
---create a local node
-  local node = Node.new(job.me) 
-  local rep={}
-  rep[1] = node:getID()
-  node:setPayload(rep)
-  log:print("APP START - node: "..job.position.." id: "..node:getID().." ip/port: ["..node:getIP()..":"..node:getPort().."]")
+	local pss = PSS.new(5, 1, 1, 4, 5, "tail", node)
+		
+	-- add PSS protocol into Coordinator 	
+	Coordinator.addProtocol("pss1", pss)
+	
+	--show added protocol
+	Coordinator.showProtocols()
 
---create a protocol coordinator for this node1
-  local coordinator = Coordinator.new(node)
-
--- setting PSS protocol 
-  local pss = PSS.new(node, 10, 1, 1, 4, 7, "rand", coordinator)   
-
---runtime coordinator 
-  coordinator:addProtocol("pss1", pss)
-  coordinator:showProtocols()
---launching the protocol
-  coordinator:launch(node, 300, 0)  -- arguments: local node ref, running time in seconds, delay to start each protocol
+	--launching protocol
+	--parameters: local node ref, running time in seconds, delay to start the protocol
+	Coordinator.launch(node, 300, 0)  
+		
 
 end
 
 events.thread(main)
 events.loop()
 ```
+
+* myExample1.lua: In this example we create a ring structure by using a simple function that calculates the clockwise distance between nodes in the target ring structure. In the target structure nodes will be connected to their successors neighbors. 
+Besides the intantiation of PSS and TMAN there are other fundamental and important functions used in this example. The function ***set_distance_function()*** sets the function used to calculate the distance between nodes. Function ***set_distFunc_extraParams()*** sets a table with any extra parameter required by the distance function. This table of parameters can be accessed in the provided distance getter function ***get_distFunc_extraParams()***. Finally, a function ***setPayload()*** sets the payload that is the information that distinguishes one node from another. In this example, the table **node_representation** carries the identifier of the node, which is used by the distance function to rank the nodes. 
+
+```
+#!lua
+
+function id_based_ring_cw_distance(self, a, b)
+	
+	-- clockwise distance function
+	
+	local aux_parameters = self:get_distFunc_extraParams()
+	if a[1]==nil
+		return 2^aux_parameters[1]-1
+	end
+			
+	local k1 = a[1]
+	local k2 = b[1]
+	local distance = 0
+
+	if k1 < k2 then 
+		distance =  k2 - k1 
+	else 
+		distance =  2^aux_parameters[1] - k1 + k2 
+	end
+	
+	return distance
+end 
+
+function main()
+		
+	local node = Node.new(job.me) 
+
+	-- setting PSS 
+	local pss = PSS.new(8, 1, 1, 4, 5, "tail", node)
+	
+	-- setting PSS as a base protocol of TMAN
+	local tman_base_protocols={pss}
+	
+	-- creating a new TMAN instance
+	-- parameters: node, view_size, cycle_period, base_procotol, active_base_protocol
+	local tman = TMAN.new(node, 4, 5, tman_base_protocols, "pss1")
+
+	-- add the clockwise-ring distance function to tman 
+	tman:set_distance_function(id_based_ring_cw_distance)
+	local m = {8} --number of bits used to calculate the distance in the ring
+	tman:set_distFunc_extraParams(m)  
+	
+	local node_representation={} 
+	node_representation[1] = node:getID()
+	node:setPayload(node_representation)
+	
+	-- add protocols to the Coordinator
+	Coordinator.addProtocol("pss1", pss)
+	Coordinator.addProtocol("tman1", tman)
+
+	--launching protocols
+	Coordinator.showProtocols()
+	Coordinator.launch(node, 300, 0)  
+end
+
+events.thread(main)
+events.loop()
+```
+
+* myExample3.lua: is similar to myExample1.lua. But in this case we have 2 tman protocols concurrently running on top of one PSS. Each protocol has a different distance function.
+
+
+```
+#!lua
+
+
+function id_based_ring_cw_distance(self, a, b)
+
+	local aux_parameters = self:get_distFunc_extraParams()
+
+	if a[1]==nil or b[1]==nil then
+		return 2^aux_parameters[1]-1
+	end
+			
+	local k1 = a[1]
+	local k2 = b[1]
+	local distance = 0
+
+	if k1 < k2 then 
+		distance =  k2 - k1 
+	else 
+		distance =  2^aux_parameters[1] - k1 + k2 
+	end
+	return distance
+
+end
+
+
+function id_based_ring_ccw_distance(self, a, b)
+
+	local aux_parameters = self:get_distFunc_extraParams()
+
+	if a[1]==nil or b[1]==nil then
+		return 2^aux_parameters[1]-1
+	end
+
+	local k1 = a[1]
+	local k2 = b[1]
+	local distance = 0
+
+	if k1 > k2 then 
+		distance =  k1 - k2
+	else 
+		 distance =  2^aux_parameters[1] - k2 - k1 
+	end
+	return distance
+end
+
+function main()
+	
+	local node = Node.new(job.me) 
+
+	-- setting PSS:
+	local pss = PSS.new(8, 1, 1, 4, 5, "tail", node)
+	Coordinator.addProtocol("pss1", pss)
+
+	-- setting TMAN 1: 
+	local tman_base_protocols={pss}
+	local tman1 = TMAN.new(node, 4, 5, tman_base_protocols, "pss1")
+
+	-- clockwise-ring distance function
+	tman1:set_distance_function(id_based_ring_cw_distance)
+	local m = {9} 
+	tman1:set_distFunc_extraParams(m)
+	
+	-- setting TMAN 2: 
+	local tman2 = TMAN.new(node, 4, 5, tman_base_protocols, "pss1")
+
+	-- counter-clockwise-ring distance function
+	tman2:set_distance_function(id_based_ring_ccw_distance)
+	tman2:set_distFunc_extraParams(m)
+
+	-- same node representation for all protocols.
+	local node_representation={} 
+	node_representation[1] = node:getID()
+	node:setPayload(node_representation)
+
+	Coordinator.addProtocol("tman1", tman1)
+	Coordinator.addProtocol("tman2", tman2)
+
+	--launching protocols
+	Coordinator.showProtocols()
+	Coordinator.launch(node, 320, 0)
+
+end
+
+events.thread(main)
+events.loop()
+
+```
+
 
 # Versions:
 v 0.1
