@@ -6,9 +6,9 @@ OUTPUT_DATA_DIR="output_data_logs"
 OUTPUT_PLOT_DIR="output_plots"
 
 
-if [ $# -eq 0 ]
+if [ $# -ne 3 ]
   then
-    echo "No arguments: inform job-number, numb-nodes and numb of cycles "
+    echo "No arguments: inform job-number, numb-nodes and numb_of_cycles "
     exit 1
 fi
 
