@@ -512,8 +512,7 @@ if __name__ == '__main__':
 	
 	filesParsedData = getDataFromAllLogFiles(listofFiles, protocolID , gossipPeriod)
 	if protocolID=='tman1':
-		#idealViews = computeIdealView(listOfNodes, clockwise_id_distance, vSize, mbit)
-		idealViews = computeIdealView(listOfNodes, counter_clockwise_id_distance, vSize, mbit)
+		idealViews = computeIdealView(listOfNodes, clockwise_id_distance, vSize, mbit)
 	elif protocolID=='tman2':
 		idealViews = computeIdealView(listOfNodes, counter_clockwise_id_distance, vSize, mbit)
 	else:

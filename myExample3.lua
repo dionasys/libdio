@@ -63,7 +63,7 @@ function main()
 	local tman1 = TMAN.new(node, 4, 5, tman_base_protocols, "pss1")
 --Clockwise-ring distance function
 	tman1:set_distance_function(id_based_ring_cw_distance)
-	local m = {9} -- number of bits which is used by the distance function to calculate the distance in the ring
+	local m = {8} -- number of bits which is used by the distance function to calculate the distance in the ring
 	tman1:set_distFunc_extraParams(m)  -- set_distFunc_extraParams() is a function sets a table with any extra parameter need for calculating the distance function. this table of parameters can be accessed in the provided distance function with the getter  ' self:get_distFunc_extraParams()'
 
 -- setting TMAN 2: 
@@ -88,7 +88,7 @@ function main()
 
 --launching protocols
 	Coordinator.showProtocols()
-	Coordinator.launch(node, 320, 0)  --parameters: local node ref, running time in seconds, delay to start each protocol
+	Coordinator.launch(node, 420, 0)  --parameters: local node ref, running time in seconds, delay to start each protocol
 
 end
 
