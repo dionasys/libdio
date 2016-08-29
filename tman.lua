@@ -620,31 +620,13 @@ end
 function TMAN.activeTMANThreadSuccess(self, received)
 	
 		local currentMethod = "[TMAN.ACTIVETMANTHREADSUCCESS] - "
-	
 	--if self.logDebug then
 		--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVETHREADSUCCESS] - STARTED")
 		--end
-	
+
 		if self.logDebug then
 			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." - received buffer invoking TMAN.UPDATE_VIEW_TO_KEEP().")
 		end
-		
-		-- test adaptation 
-		-- if received new function update locally
-		--if received == nil then
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received is nil ")
-		--else
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received is not nil - received size is: "..tostring(#received))
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received: "..tostring(received))
-		--end
-
-		-- just test value
-		--if received[1] ~= nil then
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[1] not nil")
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[1]: "..tostring(received[1]))
-		--else
-		--	log:print("DEBUG : passive thread -received[1] is nil")
-		--end
 		
 		-- if received new function update locally
 		if received[2] ~= nil then
@@ -768,28 +750,12 @@ events.thread(function()
 	--if self.logDebug then
 		--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.PASSIVE_THREAD] - STARTED")
 		--end
-		
+
 		--	 select to send
 		local buffer_to_send = self.select_view_to_send(self, sender, viewCopy)
 		
-		
-		-- test adaptation 
-		--if received == nil then
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received is nil ")
-		--else
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received is not nil - received size is: "..tostring(#received))
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received: "..tostring(received))
-		--end
-		
 		local adapt_buffer_function_to_send = {}
 		
-		-- just test value
-		--if received[1] ~= nil then
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[1] not nil")
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[1]: "..tostring(received[1]))
-		--else
-		--	log:print("DEBUG : passive thread -received[1] is nil")
-		--end
 		
 		-- if received new function update locally  -- 
 		-- TODO handle the change of the function considering that after changing the node can receive the older again
@@ -884,6 +850,40 @@ events.thread(function()
 			return ret
 		end
 	
+----------------------------------------------------
+	function TMAN.handleDistFuncFlood(self, payload)
+		
+		local currentMethod = "[TMAN.HANDLEDISTFUNCFLOOD] - "
+	
+		
+	
+	
+	end
+	----------------------------------------------------
+	function TMAN.floodDistFunc(self, ttl)
+	
+		local currentMethod = "[TMAN.FLOODDISTFUNC] - "
+		log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb)
+
+		-- prepare local function to disseminate
+		local currentFunc = string.dump(self.get_distance_function(self))
+		local funcExtraParameters =  self.get_distFunc_extraParams(self)
+		
+		local disseminationPayload = {}
+		
+		if currentFunc == nil or funcExtraParameters == nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : floodDistFunc- currentFunc or funcExtraParameters are nil")
+		else 
+			disseminationPayload = {currentFunc, funcExtraParameters , ttl}
+			
+			local viewCopy = self.getTViewCopy(self)
+			for k,v in ipairs(viewCopy) do
+				Coordinator.callAlgoMethod(self.algoId, 'handleDistFuncFlood', disseminationPayload, v.peer , self.me.id)
+			end
+			
+		end
+	
+	end
 
 ------------------------ END OF CLASS TMAN ----------------------------
 
