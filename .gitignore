@@ -9,3 +9,6 @@ mybacklog.html
 *~
 
 *.eps
+
+# directory for tests
+tests/
