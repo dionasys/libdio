@@ -223,7 +223,7 @@ Coordinator.printSenderBuffer = function()
 end
 
 Coordinator.callAlgoMethod = function(algoId, method, payload, dst, srcId)
--- TODO: possible change in the callback if changes in the send for piggybacked msgs show satisfying results.
+-- TODO: possible change in the callback if changes in the send for piggybacked msgs show satisfying results. note: piggybacked msgs didnt show any improvement in the tests. 
 
 	log:print("[Coordinator.CALLALGOMETHOD] - COORDINATOR at node: "..job.position.." callAlgoMethod invoked from node: "..srcId.." for method: "..method.." of protocol: "..algoId.." at node: "..dst.id)
 	local ok = rpc.acall(dst, {"Coordinator.dispatch", algoId, method, payload, srcId}, 3)
