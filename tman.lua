@@ -758,7 +758,6 @@ events.thread(function()
 		
 		
 		-- if received new function update locally  -- 
-		-- TODO handle the change of the function considering that after changing the node can receive the older again
 		if received[2] ~= nil then
 			--log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[2] not nil")
 			--log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[2]: "..tostring(received[2]))
@@ -849,21 +848,52 @@ events.thread(function()
 			end
 			return ret
 		end
+
+		----------------------------------------------------
+	function TMAN.floodForwardDistFunc(self, forwardingPayload)
+	
+			local currentMethod = "[TMAN.FLOODfORWARDdISTfUNC] - "
+			log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.." cycle: ")
+
+			disseminationPayload = { forwardingPayload[1], forwardingPayload[2] , forwardingPayload[3]-1 }
+			
+			local viewCopy = self.getTViewCopy(self)
+			for k,v in ipairs(viewCopy) do
+					Coordinator.callAlgoMethod(self.algoId, 'handleDistFuncFlood', disseminationPayload, v.peer , self.me.id)
+			end
+	
+	end
 	
 ----------------------------------------------------
-	function TMAN.handleDistFuncFlood(self, payload)
+	function TMAN.handleDistFuncFlood(self, receivedPayload)
 		
 		local currentMethod = "[TMAN.HANDLEDISTFUNCFLOOD] - "
-	
 		
-	
+		if receivedPayload[1] ~= nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : handleDistFuncFlood - receivedPayload[1]: "..tostring(receivedPayload[1]))
+			local receivedFunction = assert(loadstring(receivedPayload[1]))
+			self.set_distance_function(self, receivedFunction)
+		else
+			log:print(currentMethod.." node: "..job.position.." DEBUG : handleDistFuncFlood -receivedPayload[1] is nil")
+		end
+		
+		if receivedPayload[2] ~= nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - receivedPayload[2]: "..tostring(receivedPayload[2]))
+			self.set_distFunc_extraParams(self, receivedPayload[2])
+		else
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - receivedPayload[2] is nil ")
+		end
+		
+		if receivedPayload[3] ~= nil and receivedPayload[3] > 0 then
+			self.floodForwardDistFunc(self, receivedPayload)
+		end
 	
 	end
 	----------------------------------------------------
 	function TMAN.floodDistFunc(self, ttl)
 	
 		local currentMethod = "[TMAN.FLOODDISTFUNC] - "
-		log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb)
+		log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.."  DEBUG : floodDistFunc started ")
 
 		-- prepare local function to disseminate
 		local currentFunc = string.dump(self.get_distance_function(self))
@@ -872,8 +902,9 @@ events.thread(function()
 		local disseminationPayload = {}
 		
 		if currentFunc == nil or funcExtraParameters == nil then
-			log:print(currentMethod.." node: "..job.position.." DEBUG : floodDistFunc- currentFunc or funcExtraParameters are nil")
+			log:print(currentMethod.." node: "..job.position.." DEBUG : floodDistFunc - currentFunc or funcExtraParameters are nil")
 		else 
+			log:print(currentMethod.." node: "..job.position.." DEBUG : floodDistFunc - currentFunc or funcExtraParameters NOT nil")
 			disseminationPayload = {currentFunc, funcExtraParameters , ttl}
 			
 			local viewCopy = self.getTViewCopy(self)
@@ -884,6 +915,8 @@ events.thread(function()
 		end
 	
 	end
+	
+
 
 ------------------------ END OF CLASS TMAN ----------------------------
 
