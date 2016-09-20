@@ -356,11 +356,11 @@ function TMAN.getNode(self) return self.me end
 ----------------------------------------------------
 	function TMAN.set_distance_function(self, f)
 
-		--log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." distance Func: "..tostring(f))
+		log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." distance Func: "..tostring(f))
 
 		self.rank_func_lock:lock()
 			if self.rank_func_hash == nil and self.last1_rank_func_hash == nil  and self.last2_rank_func_hash == nil then 
-				--log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." add new DF ")
+				log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." add new DF ")
 				local initialHash = self.compute_hash(string.dump(f))
 				log:print("DEBUG DF_SET, at node: "..job.position.." id: "..self.me.id.." received initialHash hash: "..tostring(initialHash))
 				self.rank_func = f
@@ -403,8 +403,8 @@ function TMAN.getNode(self) return self.me end
 	end
 ----------------------------------------------------
 	function TMAN.set_distFunc_extraParams(self, args)
-	 	--self.rank_extra_params = args
-	 	--log:print("DEBUG EXTRAPAR SETTING , at node: "..job.position.." id: "..self.me.id.." EXTRAPAR : "..tostring(args))
+	 
+	 	log:print("DEBUG EXTRAPAR SETTING , at node: "..job.position.." id: "..self.me.id.." EXTRAPAR : "..tostring(args))
 
 		self.rank_extra_params_lock:lock()
 			if self.rank_extra_params == nil and self.last1_rank_extra_params == nil  and self.last2_rank_extra_params == nil then 
@@ -620,31 +620,13 @@ end
 function TMAN.activeTMANThreadSuccess(self, received)
 	
 		local currentMethod = "[TMAN.ACTIVETMANTHREADSUCCESS] - "
-	
 	--if self.logDebug then
 		--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.ACTIVETHREADSUCCESS] - STARTED")
 		--end
-	
+
 		if self.logDebug then
 			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." - received buffer invoking TMAN.UPDATE_VIEW_TO_KEEP().")
 		end
-		
-		-- test adaptation 
-		-- if received new function update locally
-		--if received == nil then
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received is nil ")
-		--else
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received is not nil - received size is: "..tostring(#received))
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received: "..tostring(received))
-		--end
-
-		-- just test value
-		--if received[1] ~= nil then
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[1] not nil")
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[1]: "..tostring(received[1]))
-		--else
-		--	log:print("DEBUG : passive thread -received[1] is nil")
-		--end
 		
 		-- if received new function update locally
 		if received[2] ~= nil then
@@ -768,31 +750,14 @@ events.thread(function()
 	--if self.logDebug then
 		--	log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [TMAN.PASSIVE_THREAD] - STARTED")
 		--end
-		
+
 		--	 select to send
 		local buffer_to_send = self.select_view_to_send(self, sender, viewCopy)
 		
-		
-		-- test adaptation 
-		--if received == nil then
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received is nil ")
-		--else
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received is not nil - received size is: "..tostring(#received))
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received: "..tostring(received))
-		--end
-		
 		local adapt_buffer_function_to_send = {}
 		
-		-- just test value
-		--if received[1] ~= nil then
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[1] not nil")
-		--	log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[1]: "..tostring(received[1]))
-		--else
-		--	log:print("DEBUG : passive thread -received[1] is nil")
-		--end
 		
 		-- if received new function update locally  -- 
-		-- TODO handle the change of the function considering that after changing the node can receive the older again
 		if received[2] ~= nil then
 			--log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[2] not nil")
 			--log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - received[2]: "..tostring(received[2]))
@@ -883,7 +848,89 @@ events.thread(function()
 			end
 			return ret
 		end
+
+		----------------------------------------------------
+	function TMAN.floodForwardDistFunc(self, forwardingPayload)
 	
+			local currentMethod = "[TMAN.FLOODfORWARDdISTfUNC] - "
+			log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.." DEBUG floodForwardDistFunc started ")
+			local dst = nil 
+			
+			disseminationPayload = { forwardingPayload[1], forwardingPayload[2] , (forwardingPayload[3])-1}
+			
+			local viewCopy = self.getTViewCopy(self)
+			
+			for k,v in ipairs(viewCopy) do
+					log:print(currentMethod.." node: "..job.position.." DEBUG :  forwarding flood to "..v.id.." with ttl: "..(forwardingPayload[3])-1)
+					log:print(currentMethod.." node: "..job.position.." DEBUG :  invoking Coordinator.callAlgoMethod at node "..v.id)
+					dst = {ip=v.peer.ip, port=v.peer.port, id=v.id}
+					Coordinator.callAlgoMethod(self.algoId, 'handleDistFuncFlood', disseminationPayload, dst , self.me.id)
+			end
+	
+	end
+	
+----------------------------------------------------
+	function TMAN.handleDistFuncFlood(self, receivedPayload)
+		
+		local currentMethod = "[TMAN.HANDLEDISTFUNCFLOOD] - "
+		log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.." DEBUG handleDistFuncFlood started ")
+		
+		if receivedPayload[1] ~= nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : handleDistFuncFlood - receivedPayload[1]: "..tostring(receivedPayload[1]))
+			local receivedFunction = assert(loadstring(receivedPayload[1]))
+			self.set_distance_function(self, receivedFunction)
+		else
+			log:print(currentMethod.." node: "..job.position.." DEBUG : handleDistFuncFlood -receivedPayload[1] is nil")
+		end
+		
+		if receivedPayload[2] ~= nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - receivedPayload[2]: "..tostring(receivedPayload[2]))
+			self.set_distFunc_extraParams(self, receivedPayload[2])
+		else
+			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - receivedPayload[2] is nil ")
+		end
+		
+		if receivedPayload[3] ~= nil and receivedPayload[3] > 0 then
+			log:print(currentMethod.." node: "..job.position.." DEBUG :  ttl is  "..receivedPayload[3])
+			self.floodForwardDistFunc(self, receivedPayload)
+		else
+			log:print(currentMethod.." node: "..job.position.." DEBUG :  ttl is  "..receivedPayload[3].." stopping forwarding")
+		end
+	
+	end
+	----------------------------------------------------
+	function TMAN.floodDistFunc(self, distFunc, extraParam, ttl)
+	
+		local currentMethod = "[TMAN.FLOODDISTFUNC] - "
+		log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.."  DEBUG : floodDistFunc started ")
+		
+		local dst = nil 
+		
+		-- prepare local function to disseminate ()
+		local funcToDissem = string.dump(distFunc)
+		--local funcExtraParameters =  self.get_distFunc_extraParams(self)
+		
+		local disseminationPayload = {}
+		
+		if distFunc == nil or extraParam == nil then
+			log:print(currentMethod.." node: "..job.position.." DEBUG : floodDistFunc - currentFunc or funcExtraParameters are nil")
+		else 
+			log:print(currentMethod.." node: "..job.position.." DEBUG : floodDistFunc - currentFunc or funcExtraParameters NOT nil")
+			disseminationPayload = {funcToDissem, extraParam , ttl}
+			
+			local viewCopy = self.getTViewCopy(self)
+			
+			for k,v in ipairs(viewCopy) do
+				log:print(currentMethod.." node: "..job.position.." DEBUG : invoking Coordinator.callAlgoMethod at node "..v.id)
+				dst = {ip=v.peer.ip, port=v.peer.port, id=v.id}
+				Coordinator.callAlgoMethod(self.algoId, 'handleDistFuncFlood', disseminationPayload, dst , self.me.id)
+			end
+			
+		end
+	
+	end
+	
+
 
 ------------------------ END OF CLASS TMAN ----------------------------
 

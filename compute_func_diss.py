@@ -88,13 +88,14 @@ if __name__ == '__main__':
 	vSize = 4
 	mbit = 8
 	gossipPeriod = 5 
-	totalnodes =64
+	totalnodes =256
 	
 	listOfTimes = []
 	listOfTimesIndex = []
 
 	source_file='./experiments/ring_convergence/data/'+JOB+'/function_propagation_'+JOB+'.dat'
 	out_file='./experiments/ring_convergence/data/'+JOB+'/computed_function_propagation_'+JOB+'.dat'
+	temp_file='./experiments/ring_convergence/data/'+JOB+'/temp_computed_function_propagation_'+JOB+'.dat'
 
 	
 	filesParsedData = getExactDataFromFile(source_file )
@@ -110,7 +111,7 @@ if __name__ == '__main__':
 	#for each in listOfTimes:
 		#print(each)
 	cumul = 0	
-	outfile = open(out_file, 'a')
+	outfile = open(temp_file, 'a')
 	line = ""
 	
 	for each in listOfTimesIndex: 
@@ -122,5 +123,6 @@ if __name__ == '__main__':
 		
 	outfile.close()
 		
-			
+	os.system('sort < '+ temp_file + ' > '+ out_file)
+	os.system('rm ' + temp_file)
 	
