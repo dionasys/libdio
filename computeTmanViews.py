@@ -511,13 +511,45 @@ if __name__ == '__main__':
 	listOfNodes = getListOfNodes(listofFiles, protocolID)
 	
 	filesParsedData = getDataFromAllLogFiles(listofFiles, protocolID , gossipPeriod)
-	if protocolID=='tman1':
-		idealViews = computeIdealView(listOfNodes, clockwise_id_distance, vSize, mbit)
-	elif protocolID=='tman2':
-		idealViews = computeIdealView(listOfNodes, counter_clockwise_id_distance, vSize, mbit)
-	else:
-		print('protocolID: '+ protocolID+ ' was not recognized')
-		sys.exit()	
+	
+	#------------------------------------------------------------	
+	# Experience 1:
+	# the following  evaluation is based on 2 different protocols is running at the same time with different functions:
+	# uncomment the lines to use it
+	#if protocolID=='tman1':
+	#	idealViews = computeIdealView(listOfNodes, clockwise_id_distance, vSize, mbit)
+	#elif protocolID=='tman2':
+	#	idealViews = computeIdealView(listOfNodes, counter_clockwise_id_distance, vSize, mbit)
+	#else:
+	#	print('protocolID: '+ protocolID+ ' was not recognized')
+	#	sys.exit()	
+		
+	#listOfBehaviors = getAllRetedBehaviorsByTime(listOfNodes, idealViews, filesParsedData)
+	#cumulatedScores = getCumulatedScoresByTime(listOfBehaviors)
+	
+	#saveCumulatedScoresToFile(cumulatedScores, './experiments/ring_convergence/data/'+JOB+'/', protocolID+'_view_convergence_job_'+JOB+'.dat')
+	#------------------------------------------------------------	
+	
+	#------------------------------------------------------------	
+	# Experience 2: 
+	# the following  evaluation is based on only one protocol runnning but in experiences where the function changes on the fly:
+	# I use it to check the adaptation of the system.  different protocols is running at the same time with different functions:
+	# uncomment the lines to use one of the functions, choose an 'function identifier" for the output files
+	
+	#functionToTest = clockwise_id_distance
+	#funcIdentifier = "cw"
+	functionToTest = counter_clockwise_id_distance
+	funcIdentifier = "ccw"
+	
+	idealViews = computeIdealView(listOfNodes, functionToTest, vSize, mbit)
+	
+	listOfBehaviors = getAllRetedBehaviorsByTime(listOfNodes, idealViews, filesParsedData)
+	cumulatedScores = getCumulatedScoresByTime(listOfBehaviors)
+	
+	saveCumulatedScoresToFile(cumulatedScores, './experiments/ring_convergence/data/'+JOB+'/', protocolID+'_view_convergence_job_'+JOB+'_'+funcIdentifier+'.dat')
+	
+	#------------------------------------------------------------
+		
 	
 	# finally create a function to calculate the ratio 'current view/ideal view' at each time, for all nodes that logged at this time.
 	# the output would be something like [ at_segundo_x, total_logged_nodes , avg_of_all_ratios or comulated_ratios ] 
@@ -544,10 +576,10 @@ if __name__ == '__main__':
 	# this function is useful for debugging
 	#listOfBehaviors = getRatedBehaviorsPerNode(listOfNodes, idealViews, filesParsedData)
 	
-	listOfBehaviors = getAllRetedBehaviorsByTime(listOfNodes, idealViews, filesParsedData)
-	cumulatedScores = getCumulatedScoresByTime(listOfBehaviors)
+	#listOfBehaviors = getAllRetedBehaviorsByTime(listOfNodes, idealViews, filesParsedData)
+	#cumulatedScores = getCumulatedScoresByTime(listOfBehaviors)
 	
-	saveCumulatedScoresToFile(cumulatedScores, './experiments/ring_convergence/data/'+JOB+'/', protocolID+'_view_convergence_job_'+JOB+'.dat')
+	#saveCumulatedScoresToFile(cumulatedScores, './experiments/ring_convergence/data/'+JOB+'/', protocolID+'_view_convergence_job_'+JOB+'.dat')
 	
 	
 	#print(getShortestRunningTime(listOfBehaviors, gossipPeriod))

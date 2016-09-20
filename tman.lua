@@ -356,11 +356,11 @@ function TMAN.getNode(self) return self.me end
 ----------------------------------------------------
 	function TMAN.set_distance_function(self, f)
 
-		--log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." distance Func: "..tostring(f))
+		log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." distance Func: "..tostring(f))
 
 		self.rank_func_lock:lock()
 			if self.rank_func_hash == nil and self.last1_rank_func_hash == nil  and self.last2_rank_func_hash == nil then 
-				--log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." add new DF ")
+				log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." add new DF ")
 				local initialHash = self.compute_hash(string.dump(f))
 				log:print("DEBUG DF_SET, at node: "..job.position.." id: "..self.me.id.." received initialHash hash: "..tostring(initialHash))
 				self.rank_func = f
@@ -403,8 +403,8 @@ function TMAN.getNode(self) return self.me end
 	end
 ----------------------------------------------------
 	function TMAN.set_distFunc_extraParams(self, args)
-	 	--self.rank_extra_params = args
-	 	--log:print("DEBUG EXTRAPAR SETTING , at node: "..job.position.." id: "..self.me.id.." EXTRAPAR : "..tostring(args))
+	 
+	 	log:print("DEBUG EXTRAPAR SETTING , at node: "..job.position.." id: "..self.me.id.." EXTRAPAR : "..tostring(args))
 
 		self.rank_extra_params_lock:lock()
 			if self.rank_extra_params == nil and self.last1_rank_extra_params == nil  and self.last2_rank_extra_params == nil then 
@@ -853,13 +853,18 @@ events.thread(function()
 	function TMAN.floodForwardDistFunc(self, forwardingPayload)
 	
 			local currentMethod = "[TMAN.FLOODfORWARDdISTfUNC] - "
-			log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.." cycle: ")
-
-			disseminationPayload = { forwardingPayload[1], forwardingPayload[2] , forwardingPayload[3]-1 }
+			log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.." DEBUG floodForwardDistFunc started ")
+			local dst = nil 
+			
+			disseminationPayload = { forwardingPayload[1], forwardingPayload[2] , (forwardingPayload[3])-1}
 			
 			local viewCopy = self.getTViewCopy(self)
+			
 			for k,v in ipairs(viewCopy) do
-					Coordinator.callAlgoMethod(self.algoId, 'handleDistFuncFlood', disseminationPayload, v.peer , self.me.id)
+					log:print(currentMethod.." node: "..job.position.." DEBUG :  forwarding flood to "..v.id.." with ttl: "..(forwardingPayload[3])-1)
+					log:print(currentMethod.." node: "..job.position.." DEBUG :  invoking Coordinator.callAlgoMethod at node "..v.id)
+					dst = {ip=v.peer.ip, port=v.peer.port, id=v.id}
+					Coordinator.callAlgoMethod(self.algoId, 'handleDistFuncFlood', disseminationPayload, dst , self.me.id)
 			end
 	
 	end
@@ -868,6 +873,7 @@ events.thread(function()
 	function TMAN.handleDistFuncFlood(self, receivedPayload)
 		
 		local currentMethod = "[TMAN.HANDLEDISTFUNCFLOOD] - "
+		log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.." DEBUG handleDistFuncFlood started ")
 		
 		if receivedPayload[1] ~= nil then
 			log:print(currentMethod.." node: "..job.position.." DEBUG : handleDistFuncFlood - receivedPayload[1]: "..tostring(receivedPayload[1]))
@@ -885,31 +891,39 @@ events.thread(function()
 		end
 		
 		if receivedPayload[3] ~= nil and receivedPayload[3] > 0 then
+			log:print(currentMethod.." node: "..job.position.." DEBUG :  ttl is  "..receivedPayload[3])
 			self.floodForwardDistFunc(self, receivedPayload)
+		else
+			log:print(currentMethod.." node: "..job.position.." DEBUG :  ttl is  "..receivedPayload[3].." stopping forwarding")
 		end
 	
 	end
 	----------------------------------------------------
-	function TMAN.floodDistFunc(self, ttl)
+	function TMAN.floodDistFunc(self, distFunc, extraParam, ttl)
 	
 		local currentMethod = "[TMAN.FLOODDISTFUNC] - "
 		log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.."  DEBUG : floodDistFunc started ")
-
-		-- prepare local function to disseminate
-		local currentFunc = string.dump(self.get_distance_function(self))
-		local funcExtraParameters =  self.get_distFunc_extraParams(self)
+		
+		local dst = nil 
+		
+		-- prepare local function to disseminate ()
+		local funcToDissem = string.dump(distFunc)
+		--local funcExtraParameters =  self.get_distFunc_extraParams(self)
 		
 		local disseminationPayload = {}
 		
-		if currentFunc == nil or funcExtraParameters == nil then
+		if distFunc == nil or extraParam == nil then
 			log:print(currentMethod.." node: "..job.position.." DEBUG : floodDistFunc - currentFunc or funcExtraParameters are nil")
 		else 
 			log:print(currentMethod.." node: "..job.position.." DEBUG : floodDistFunc - currentFunc or funcExtraParameters NOT nil")
-			disseminationPayload = {currentFunc, funcExtraParameters , ttl}
+			disseminationPayload = {funcToDissem, extraParam , ttl}
 			
 			local viewCopy = self.getTViewCopy(self)
+			
 			for k,v in ipairs(viewCopy) do
-				Coordinator.callAlgoMethod(self.algoId, 'handleDistFuncFlood', disseminationPayload, v.peer , self.me.id)
+				log:print(currentMethod.." node: "..job.position.." DEBUG : invoking Coordinator.callAlgoMethod at node "..v.id)
+				dst = {ip=v.peer.ip, port=v.peer.port, id=v.id}
+				Coordinator.callAlgoMethod(self.algoId, 'handleDistFuncFlood', disseminationPayload, dst , self.me.id)
 			end
 			
 		end

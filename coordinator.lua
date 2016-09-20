@@ -7,6 +7,7 @@ Coordinator.senderBuffer={}
 Coordinator.piggybackMsg=false
 Coordinator.senderPeriod=7
 Coordinator.sender_msgs_lock = events.lock()
+Coordinator.disseminationTTL = 5 
 
 -- for evaluation only
 Coordinator.totalOkMsgs=0
@@ -14,9 +15,14 @@ Coordinator.totalFailedMsgs=0
 
 
 
-Coordinator.setPiggyBackMsgs=function(value)
+Coordinator.setPiggyBackMsgs = function(value)
 	Coordinator.piggybackMsg=value
 end
+
+Coordinator.setDisseminationTTL = function(value)
+	Coordinator.disseminationTTL = value
+end
+
 
 Coordinator.addProtocol=function(algo_id, algo_obj)
    
@@ -38,7 +44,7 @@ Coordinator.showProtocols=function()
    log:print("####################################")
 end
 
-Coordinator.launch=function(node, running_time, delay)
+Coordinator.launch = function(node, running_time, delay)
 	-- set termination thread
  	events.thread(function() events.sleep(running_time) os.exit() end)
 	
@@ -59,7 +65,7 @@ Coordinator.launch=function(node, running_time, delay)
 	
 end
 
-Coordinator.passive_thread=function(algoId, from, buffer)
+Coordinator.passive_thread = function(algoId, from, buffer)
 	-- msg1 = {"Coordinator.passive_thread", algoId1, sender, buf} 
 	
 	--log:print(" DEBUG [Coordinator.passive] - testing variables at node: "..job.position.." INVOKED") 
@@ -105,7 +111,7 @@ Coordinator.passive_thread=function(algoId, from, buffer)
 
 end
 
-Coordinator.sender=function()
+Coordinator.sender = function()
 	-- This msg table will be like  this: sender_buffer={ {dest={peer1}, msgs={msg1, msg2}}  {dest={peer2}, msgs={msg3}}  ... }
 	-- ex: msg1 = {"Coordinator.passive_thread", algoId1, sender, buf, eventToFire, timeout, dst} 
 	-- ex: peer1={ip = "127.0.0.1", port = 200}
@@ -131,7 +137,7 @@ Coordinator.sender=function()
 		
 end
 
-Coordinator.ship=function(sender, v, timeout, allEventsToFire)
+Coordinator.ship = function(sender, v, timeout, allEventsToFire)
 
 		--log:print("[Coordinator.ship] - ship THREAD at node: "..job.position.." id: "..sender.id.." sending "..#v.msgs.." protocols")
 
@@ -147,7 +153,7 @@ Coordinator.ship=function(sender, v, timeout, allEventsToFire)
 		
 end
 
-Coordinator.send=function(algoId, dst, buf, eventToFire, invokingProtocolID)
+Coordinator.send = function(algoId, dst, buf, eventToFire, invokingProtocolID)
 	---- This msg table will be like  this: sender_buffer={ {dest={peer1}, msgs={msg1, msg2}}  {dest={peer2}, msgs={msg3}}  ... }
 	-- ex: msg1 = {"Coordinator.passive_thread", algoId1, sender, buf, eventToFire, timeout, dst} 
 	-- ex: peer1={ip = "127.0.0.1", port = 200}
@@ -249,8 +255,54 @@ Coordinator.dispatch = function(algoId, method, payload, srcId)
 	end
 end
 
+Coordinator.replaceDistFunctionAtLayer = function(algoId, newDistFunction, newExtraParameters)
 
-Coordinator.bootstrap=function(node)
+	log:print("DEBUG : COORDINATOR at node: "..job.position.." [Coordinator.REPLACEDISTFUNCTIONATLAYER] - started for protocol: "..algoId)
+	
+	local algo = nil
+  for k,v in pairs(Coordinator.algos) do 
+ 	    if v.id==algoId then
+ 	  		 algo = v.obj
+ 	    end
+  end
+	
+	if algo then 
+		log:print("DEBUG : [Coordinator.REPLACEDISTFUNCTIONATLAYER] at node: "..job.position.." protocol: "..algoId.." not nil:  invoking set_distance_function , set_distFunc_extraParams and floodDistFunc ")
+		
+		algo['set_distance_function'](algo, newDistFunction)
+		algo['set_distFunc_extraParams'](algo, newExtraParameters)
+		algo['floodDistFunc'](algo, newDistFunction, newExtraParameters, Coordinator.disseminationTTL)
+	else 
+		log:warning("DEBUG : [Coordinator.REPLACEDISTFUNCTIONATLAYER] - COORDINATOR at node: "..job.position.." No instance of algorithm "..algoId.." found") 
+	end
+
+end
+
+
+Coordinator.setProtoDistFunction = function(algoId, newDistFunction, newExtraParameters)
+	
+	log:print("DEBUG : COORDINATOR at node: "..job.position.." [Coordinator.SETPROTODISTFUNCTION] - started for protocol: "..algoId)
+	
+
+	local algo = nil
+  for k,v in pairs(Coordinator.algos) do 
+ 	    if v.id==algoId then
+ 	  		 algo = v.obj
+ 	    end
+  end
+	
+	if algo then 
+		log:print("DEBUG : [Coordinator.SETPROTODISTFUNCTION] at node: "..job.position.." protocol: "..algoId.." not nil:  invoking set_distance_function and set_distFunc_extraParams.")
+		algo['set_distance_function'](algo, newDistFunction)
+		algo['set_distFunc_extraParams'](algo, newExtraParameters)
+	else 
+		log:warning("DEBUG : [Coordinator.SETPROTODISTFUNCTION] - COORDINATOR at node: "..job.position.." No instance of algorithm "..algoId.." found") 
+	end
+
+end
+
+
+Coordinator.bootstrap = function(node)
 	
 	
 	if job.position ~= #job.get_live_nodes() then
