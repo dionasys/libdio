@@ -1,6 +1,8 @@
 # ignore the directory with raw and parsed files from experiments
 raw_outputs/
 output_data_logs/
+# ignore deprecated 
+deprecated/
 
 # ignore my backlog file
 mybacklog.html
@@ -12,3 +14,4 @@ mybacklog.html
 
 # directory for tests
 tests/
+experiments/ring_convergence/plots/old/
