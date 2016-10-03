@@ -1,12 +1,11 @@
 #!/usr/bin/python
 import os.path, sys
-# this is a simple merge that is used avoid the problems with SPLAY's merger, mergers all files to a single one
-# 5 possible ways of using this script:
-#	1) simpleMerge.py
-#	2) simpleMerge.py out=xxx  -> uses the std input (myTest.lua)
-#	3) simpleMerge.py in=xxx   -> uses the std output(libdio.lua)
-#	4) simpleMerge.py out=xxx simpleMerge.py in=xxx
-#	5) simpleMerge.py in=xxx simpleMerge.py out=xxx
+''' this is a simple merge that is used avoid the problems with SPLAY's merger, mergers all files to a single one 5 possible ways of using this script:
+1) simpleMerge.py
+2) simpleMerge.py out=xxx  -> uses the std input (myTest.lua)
+3) simpleMerge.py in=xxx   -> uses the std output(libdio.lua)
+4) simpleMerge.py out=xxx simpleMerge.py in=xxx
+5) simpleMerge.py in=xxx simpleMerge.py out=xxx '''
 
 print('Preparing files...')
 
@@ -72,26 +71,14 @@ print('merging files  : '+ str(filesToMerge))
 print('selected input: ' + stdInput)
 print('selected output: ' + output_file)
 
-# check if selected output is part of default files
+
 if output_file in filesToMerge: 
 	filenameError('output')
 
-# remove output file if exists
 try:
 	os.remove(output_file)
 except OSError:
 	pass
-# 
-#merge files in the list into a single output file 
-#for eachFile in filesToMerge:
-#	currentFile = open(eachFile, 'r')
-#	outFile = open(output_file, 'a')
-#	try:
-#		for line in currentFile: 
-#			outFile.write(line)
-#	finally:
-#		currentFile.close
-#		outFile.close
 
 try:
 	outFile = open(output_file, 'a')
