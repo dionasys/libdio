@@ -1,12 +1,9 @@
 --#################### CLASS NODE ###################################
 local Node = {}
 Node.__index = Node 
---TODO: ASAP:  set type for id , either hashed or job.position based. change set_IDSpace , compute_ID set_hashed accordingly 
 
 function Node.new(me)
-
-local self = setmetatable({}, Node)
-	
+	local self = setmetatable({}, Node)
 	self.peer=me
 	self.id=job.position
 	self.age=0
@@ -18,14 +15,8 @@ local self = setmetatable({}, Node)
 	
 	self.computeID_func=nil
 	self.computeID_func_params={}
-	
   return self
 end
-
-
---function Node.compute_hash(self, o, bits) 	
---	return string.sub(crypto.evp.new("sha1"):digest(o), 1, bits/4)  
---end
 
 ----------------------------------------------------
 	function Node.set_computeID_function(self, f)
@@ -79,7 +70,6 @@ function Node.set_hashedID(self)
 end
 
 function Node.toBits(num, bits)
--- only used for checking the selected values.
   local i = 2
   bits = bits or select(i, math.frexp(num))
   local t = {}
@@ -94,45 +84,34 @@ end
 function Node.set_IDSpace(self, bits)
 
 		self.idexpo = bits
-
-      local r = 0
-      if bits%4 == 0 then
-         r = bits/4
-      else
-         r= bits/4 + 1
-      end
-      
+		local r = 0
+		if bits%4 == 0 then
+			r = bits/4
+		else
+			r= bits/4 + 1
+		end
 		log:print("[set_IDSpace] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  selected number of bits: "..bits.." hexa need to represent it: "..r)
-      local resultHexa = string.sub(crypto.evp.new("sha1"):digest(tostring(job.me.ip)..":"..tostring(job.me.port)), 1, r)
- 	 		log:print("[set_IDSpace] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  hashed(ip port) resultHexa: "..resultHexa)
-      local resultNumb = tonumber(resultHexa,16)
-      --local x = self.toBits(result3)
-      --ret = ""
-      --for j = 1, #x do
-      --  ret = ret..x[j]
-      --end
-		 	log:print("[set_IDSpace] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  resultHexa to number: "..resultNumb)
-      self.id = resultNumb
-		
+		local resultHexa = string.sub(crypto.evp.new("sha1"):digest(tostring(job.me.ip)..":"..tostring(job.me.port)), 1, r)
+		log:print("[set_IDSpace] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  hashed(ip port) resultHexa: "..resultHexa)
+		local resultNumb = tonumber(resultHexa,16)
+		log:print("[set_IDSpace] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  resultHexa to number: "..resultNumb)
+		self.id = resultNumb
 end
 
 
 function Node.compute_ID(self, bits, ip , port)
-	
 			log:print("[compute_ID] IDSPACE - At node: "..job.position.." id: "..self.id.." computing hash id to IP: "..ip.." PORT: "..port)
-      local r = 0
-      if bits%4 == 0 then
-         r = bits/4
-      else
-         r= bits/4 + 1
-      end
- 			
-      local resultHexa = string.sub(crypto.evp.new("sha1"):digest(tostring(ip)..":"..tostring(port)), 1, r)
-      log:print("[compute_ID] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  hashed(ip port) resultHexa: "..resultHexa)
-      local resultNumb = tonumber(resultHexa,16)
-      log:print("[compute_ID] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  resultHexa to number: - returning: "..resultNumb)
-      return resultNumb
-		
+			local r = 0
+			if bits%4 == 0 then
+				r = bits/4
+			else
+				r= bits/4 + 1
+			end
+			local resultHexa = string.sub(crypto.evp.new("sha1"):digest(tostring(ip)..":"..tostring(port)), 1, r)
+			log:print("[compute_ID] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  hashed(ip port) resultHexa: "..resultHexa)
+			local resultNumb = tonumber(resultHexa,16)
+			log:print("[compute_ID] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  resultHexa to number: - returning: "..resultNumb)
+			return resultNumb
 end
 
 function Node.getIDExpo(self)
@@ -177,23 +156,16 @@ function Node.getAge(self)
 end
 
 function Node.setPayload(self, payload)
-  
- 	 --for k,v in pairs(payload) do
-		--	self.payload[k] = v 
- 	 --end
-  
-  	self.payload= payload
-  	
-	  local pl_string = ""
-	
-		for i=1, #self.payload do
-			 pl_string = pl_string.." "..self.payload[i]
-	 	end
-	 	if self.logDebug then
-	 		log:print("NODE - At node: "..job.position.." id: "..self.id.." setting node representation (payload): [ "..pl_string.." ]")
-	 	end
-  
+	self.payload= payload
 
+	local pl_string = ""
+	
+	for i=1, #self.payload do
+		pl_string = pl_string.." "..self.payload[i]
+	end
+	if self.logDebug then
+		log:print("NODE - At node: "..job.position.." id: "..self.id.." setting node representation (payload): [ "..pl_string.." ]")
+	end
 end
 
 function Node.getPayload(self)
@@ -203,8 +175,5 @@ end
 function Node.getPayloadSize(self)
 	return #self.payload
 end
-
-
-
 ------------------------ END OF CLASS NODES --------------------------
 
