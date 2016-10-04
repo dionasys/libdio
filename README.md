@@ -33,7 +33,7 @@ Lets check some of these examples :
 
 
 ```
-#!lua
+-- myPSSExample.lua:
 
 function main()		
 		
@@ -66,7 +66,7 @@ events.loop()
 Besides the intantiation of PSS and TMAN there are other fundamental and important functions used in this example. The function ***set_distance_function()*** sets the function used to calculate the distance between nodes. Function ***set_distFunc_extraParams()*** sets a table with any extra parameter required by the distance function. This table of parameters can be accessed in the provided distance getter function ***get_distFunc_extraParams()***. Finally, a function ***setPayload()*** sets the payload that is the information that distinguishes one node from another. In this example, the table **node_representation** carries the identifier of the node, which is used by the distance function to rank the nodes. 
 
 ```
-#!lua
+-- myExample1.lua: 
 
 function id_based_ring_cw_distance(self, a, b)
 	
@@ -130,7 +130,7 @@ events.loop()
 
 
 ```
-#!lua
+-- myExample3.lua:
 
 
 function id_based_ring_cw_distance(self, a, b)
@@ -210,6 +210,99 @@ function main()
 	--launching protocols
 	Coordinator.showProtocols()
 	Coordinator.launch(node, 320, 0)
+
+end
+
+events.thread(main)
+events.loop()
+
+```
+
+* myExample4.lua: is similar to myExample3.lua. However, in this case the distance function is changed on-the-fly in order to check how the system can be adapted from one structure to another. When the function is changed, a new structure arises.   
+
+```
+-- myExample4: 
+
+
+
+function id_based_ring_cw_distance(self, a, b)
+
+	local aux_parameters = self:get_distFunc_extraParams()
+	if a[1]==nil or b[1]==nil then
+		return 2^aux_parameters[1]-1
+	end
+
+	local k1 = a[1]
+	local k2 = b[1]
+	local distance = 0
+
+	if k1 < k2 then 
+		distance =  k2 - k1 
+	else 
+		distance =  2^aux_parameters[1] - k1 + k2 
+	end
+	return distance
+end
+
+
+function id_based_ring_ccw_distance(self, a, b)
+
+	local aux_parameters = self:get_distFunc_extraParams()
+
+	if a[1]==nil or b[1]==nil then
+		return 2^aux_parameters[1]-1
+	end
+
+	local k1 = a[1]
+	local k2 = b[1]
+	local distance = 0
+
+	if k1 > k2 then 
+		distance =  k1 - k2
+	else 
+		 distance =  2^aux_parameters[1] - k2 - k1 
+	end
+	--distance = (2^aux_parameters[1] + k1 - k2 ) % 2^aux_parameters[1]
+	return distance
+end
+
+function main()
+	
+	local node = Node.new(job.me) 
+	log:print("APP START - node: "..job.position.." id: "..node:getID().." ip/port: ["..node:getIP()..":"..node:getPort().."]")
+
+-- setting PSS:
+	local pss = PSS.new(8, 1, 1, 4, 5, "tail", node)
+	Coordinator.addProtocol("pss1", pss)
+
+-- setting TMAN 1: 
+	local tman_base_protocols={pss}
+	local tman1 = TMAN.new(node, 4, 5, tman_base_protocols, "pss1")
+	Coordinator.addProtocol("tman1", tman1)
+	
+	local extraParameters = {8} -- number of bits that defines the size of the ring
+	
+	log:print("APP at node: "..job.position.." id: "..node:getID().." Coordinator setting distance function and extra parameters")
+	Coordinator.setProtoDistFunction("tman1", id_based_ring_cw_distance, extraParameters)
+
+	local rep={}
+	rep[1] = node:getID()
+	node:setPayload(rep)
+
+--launching protocols
+	Coordinator.showProtocols()
+	Coordinator.setDisseminationTTL(8)
+	Coordinator.launch(node, 420, 0)  --parameters: local node ref, running time in seconds, delay to start each protocol
+	
+--event to change the distance function after a time: 
+	if job.position == 1 then 
+		log:print("DEBUG DF_SET at node "..job.position.." id: "..node:getID().." scheduling thread for changing the distance function")
+		events.thread(function() 
+		events.sleep(120) 
+		log:print("DEBUG DF_SET at node "..job.position.." changing function to ccw!")
+		Coordinator.replaceDistFunctionAtLayer("tman1", id_based_ring_ccw_distance, extraParameters) 
+		end)
+	end
 
 end
 
