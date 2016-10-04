@@ -1,5 +1,8 @@
--- myExample 2:
+--[[
 
+myExample 2: The structure is a cluster where nodes are organized based on their interests. Jaccard distance is used to calculate de distance.
+
+]] 
 
 ----------------------------------------------------
 function jaccard_distance(self, a, b)

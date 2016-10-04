@@ -1,5 +1,8 @@
--- myExample3.lua: is similar to myExample1.lua. But in this case we have 2 tman protocols running at same time on top of pss1
+--[[
+ 
+myExample3.lua:  Similar to myExample1.lua. But in this case we have 2 tman protocols running at same time on top of the PSS. Each TMAN uses a different distance function
 
+]] 
 
 function id_based_ring_cw_distance(self, a, b)
 

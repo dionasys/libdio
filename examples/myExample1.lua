@@ -1,5 +1,8 @@
--- myExample 1:
+--[[
 
+myExample 1: This example creates a Ring, organized using a clockwise distance function. 
+
+]] 
 
 function id_based_ring_cw_distance(self, a, b)
 
@@ -39,7 +42,7 @@ function main()
 
 	Coordinator.addProtocol("tman1", tman)
 
---Test: Clockwise-ring distance function
+-- Clockwise-ring distance function
 	tman:set_distance_function(id_based_ring_cw_distance)
 	local m = {8} -- number of bits which is used by the distance function to calculate the distance in the ring
 	tman:set_distFunc_extraParams(m)  -- set_distFunc_extraParams() is a function sets a table with any extra parameter need for calculating the distance function. this table of parameters can be accessed in the provided distance function with the getter  ' self:get_distFunc_extraParams()'
