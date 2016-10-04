@@ -1,4 +1,4 @@
--- myPSSExample:
+-- myPSSExample: simple example of PSS deployment
 
  
 function main()		
