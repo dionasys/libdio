@@ -16,8 +16,10 @@ libdio is built upon SPLAY framework and this work was developed as a part of DI
 
 # The architecture
 
-Here we have a representation of the main blocks of the library.
-![Architecture in blocks - picture](docs/img/lib_architeture.png?raw=true "libio_blocks")
+Here we have a representation of the main blocks of the library that gives an idea about its internals.
+
+
+![Architecture in blocks - picture](docs/img/lib_architeture.png?raw=true =500x300 "libio_blocks")
 
 
 # The API:
