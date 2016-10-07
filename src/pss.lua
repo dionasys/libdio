@@ -3,6 +3,7 @@
 local PSS = {}
 PSS.__index = PSS 
 
+
 function PSS.new(c, h, s, fanout,cyclePeriod, selection, me)
   local self = setmetatable({}, PSS)
   self.cycle_numb=0
@@ -26,7 +27,6 @@ function PSS.new(c, h, s, fanout,cyclePeriod, selection, me)
   self.coordinator = coord
   self.protoName="PSS"
   self.all_known_nodes={}
-  
   return self
 end
 
@@ -74,7 +74,6 @@ function PSS.pss_selectPartner(self, viewCopy)
 			assert (not (head_ind == -1))
 			return head_ind
 		end
-		
 	else
 		return false
 	end
@@ -95,16 +94,17 @@ function PSS.contains_id(t,id)
 end
 ---------------------------------------------------i
 function PSS.add_to_known_ids_set(self, node)
+	
 		for k,v in pairs(self.all_known_nodes) do
 			if v == node.id then 
 				return
 			end 
 		end
 		self.all_known_nodes[#self.all_known_nodes+1] = node.id
-	end
+end
 ------------------------------------------
 function PSS.get_logged_known_ids(self)
-	--print("received set size: "..#set)
+
 	res = ""
 	for k, v in ipairs(self.all_known_nodes) do
 		res = res..tostring(v).." "
@@ -114,6 +114,7 @@ end
 
 ---- ----------------------------------------------------
 function PSS.pss_selectToSend(self, t_type, viewCopy)		
+
 	local currentMethod = "[("..t_type..") - PSS.pss_SELECTTOSEND() ] - "
 	local toSend = {}
 	table.insert(toSend, self.me) 
@@ -139,8 +140,8 @@ function PSS.pss_selectToSend(self, t_type, viewCopy)
 			toSend[#toSend+1]=viewCopy[i]
 		end
 	end
-		return toSend
-	end
+	return toSend
+end
   ----------------------------------------------------
   function PSS.pss_selectToKeep(self, received, t_type)
 
@@ -195,7 +196,6 @@ function PSS.pss_selectToSend(self, t_type, viewCopy)
 ---------------------------------------------------
 function PSS.remove_old_entries(self, toRemove, viewCopy)
 
-		local currentMethod = "[PSS.REMOVE_OLD_ENTRIES] - "
 		local diff = false
 		if #viewCopy>1 then 
 			for i=1,#viewCopy-1 do
@@ -214,21 +214,10 @@ function PSS.remove_old_entries(self, toRemove, viewCopy)
 							end
 						end
 						if  oldest_index > -1 then 
-							if self.logDebug then
-								log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." removing oldest node: "..viewCopy[oldest_index].id.."("..viewCopy[oldest_index].age..")")
-							end
 							table.remove(viewCopy,oldest_index)
 						end
 						toRemove = toRemove - 1
 					end
-			else
-				if self.logDebug then
-					log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." NO NODES WITH DIFFERENT AGES WERE FOUND to remove the oldest nodes")
-				end
-			end
-		else
-			if self.logDebug then
-				log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." RECEIVED  VIEW COPY SIZE IS ZERO - Nothing to remove")
 			end
 		end
 		return viewCopy
@@ -241,6 +230,7 @@ function PSS.pss_send_at_rpc(self,peer,pos,buf)
 end
 ----------------------------------------------------
 function PSS.remove_all_instances_of_me(view, id)
+	
 	local found = true
 	local index, value = 0
 	while(found) do
@@ -260,13 +250,12 @@ function PSS.remove_all_instances_of_me(view, id)
 end
 ----------------------------------------------------
 function PSS.passive_thread(self, from, buffer)
-	 local currentMethod = "[PSS.PASSIVE_THREAD] - "
+
 		events.thread(function()
-		local currentMethod = "[PSS.PASSIVE_THREAD] - "
-		local viewCopy = self.getViewCopy(self)
+			local viewCopy = self.getViewCopy(self)
 			self.utils:print_this_view("[PSS.PASSIVE_THREAD_RECEIVED] received VIEW (buffer) from "..from.id, buffer, self.cycle_numb, self.algoId)
-		local retView = self.pss_selectToSend(self, "PASSIVE_THREAD", viewCopy)
-		Coordinator.callAlgoMethod(self.algoId, 'activeThreadSuccess', retView, from, self.me.id)
+			local retView = self.pss_selectToSend(self, "PASSIVE_THREAD", viewCopy)
+			Coordinator.callAlgoMethod(self.algoId, 'activeThreadSuccess', retView, from, self.me.id)
 		end)
 		self.pss_selectToKeep(self,buffer, "PASSIVE_THREAD")
 end
@@ -287,9 +276,8 @@ function PSS.active_thread(self)
 		end	
 		local partner = viewCopy[partner_ind]
 		local buffer = self.pss_selectToSend(self, "ACTIVE_THREAD", viewCopy)
-		log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." [PSS.ACTIVE_THREAD] - INVOKING Coordinator.send()")
 		Coordinator.send(self.algoId, partner, buffer, 'CompleteActive',  self.algoId)
-		
+
 		events.wait('CompleteActive')
 		self.view_copy = self.getViewCopy(self)
 		self.view_lock:lock()
@@ -302,14 +290,13 @@ function PSS.active_thread(self)
 end
 ----------------------------------------------------
 function PSS.activeThreadSuccess(self, received)
-	local currentMethod = "[PSS.ACTIVETHREADSUCCESS] - "
+
 	self.pss_selectToKeep(self, received, "ACTIVE_THREAD")
 	events.fire('CompleteActive')
 end
 ----------------------------------------------------
 function PSS.getViewCopy(self)
-	
-	local currentMethod = "[PSS.getViewCopy] - "
+
 	self.view_lock:lock()
 	local copy = misc.dup(self.view)
 	self.view_lock:unlock()
@@ -318,15 +305,13 @@ function PSS.getViewCopy(self)
 end
 ----------------------------------------------------
 function PSS.getViewSnapshot(self)
-		
-		local currentMethod = "[PSS.GETVIEWSNAPSHOT] - "
+
 		return self.view_copy
 		
 	end
 ----------------------------------------------------
 function PSS.getPeer(self)
 		
-		local currentMethod = "[PSS.GETPEER] - "
 		local viewCopy = self.getViewCopy(self)
 		self.utils:print_this_view("[PSS.GETPEER]] - CURRENT PSS_VIEW: ", self.view, self.cycle_numb, self.algoId)	
 		local peer=nil
@@ -335,16 +320,14 @@ function PSS.getPeer(self)
 		else
 			peer = nil
 		end
-		if self.logDebug then
-			self.utils:print_this_view(currentMethod.."PSS - returning VIEW_COPY_PSS: ", viewCopy, self.cycle_numb, self.algoId)	
-		end
 		return peer
 end
 ----------------------------------------------------
 function PSS.init(self, peerToBoot)
+	
 	local currentMethod = "[PSS.INIT] - "
 	if not peerToBoot then 
-		log:print("Didnt received peerBoot")
+		log:warning("Didnt received peerBoot")
 		return 
 	end
 	self.view[#self.view + 1] = peerToBoot

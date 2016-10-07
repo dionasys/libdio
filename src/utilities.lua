@@ -1,18 +1,18 @@
 --#################### CLASS UTILITIES ###################################
 local Utilities={}
 Utilities.__index=Utilities
-------------------------------------------------
+
 function Utilities.new()
   local self=setmetatable({}, Utilities)
   return self
 end
-------------------------------------------------
+
 function Utilities.new(node)
 	local self=setmetatable({}, Utilities)
 	self.node = node 
 	return self
 end
-------------------------------------------------
+
 function set_of_peers_to_string(v)
 		local ret = ""
 		if #v > 0 then
@@ -26,7 +26,7 @@ function set_of_peers_to_string(v)
 		end
 		return ret
 end
-------------------------------------------------
+
 function Utilities.print_this_view(self, message, view, cycle, algoId)
 	if message then 
 		log:print("ALGO_ID:["..algoId.."] - "..message.." at node: "..job.position.." id: "..self.node:getID().." cycle: "..cycle.." view(#"..#view.."): [ "..set_of_peers_to_string(view).."]")
@@ -34,7 +34,7 @@ function Utilities.print_this_view(self, message, view, cycle, algoId)
 		log:print("ALGO_ID:["..algoId.."] VIEW at node: "..job.position.." id: "..self.node:getID().." cycle: "..cycle.." view(# "..#view.." ): [ "..set_of_peers_to_string(view).."]")
 	end
 end
-------------------------------------------------
+
 function Utilities.remove_dup(self, set)
 		for i,v in ipairs(set) do
 			local j = i+1
@@ -46,7 +46,7 @@ function Utilities.remove_dup(self, set)
 			end
 		end
 end
-------------------------------------------------
+
 function get_payload_as_string(peer)
 	local mypayload = get_payload(peer)
 		local res =""
@@ -55,7 +55,7 @@ function get_payload_as_string(peer)
 		end
 		return "["..res.."] "
 end
-------------------------------------------------
+
 function get_payload(peer)
 		local payl = {}
 		if type(peer) == "table" then 

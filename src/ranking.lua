@@ -1,8 +1,12 @@
-'''Global functions: These are the pre-defined distance functions and the functions used to set the correct payload (the data structure used by the selected distance function), according to the select distance func.'''
+'''Global functions: 
+These are the pre-defined distance functions and the functions used to set the correct payload (the data structure used by the selected distance function), 
+according to the select distance func. We can define some functions here to be used by programmers or simple give the programmer the possibility to create its own functions as shows in the examples folder.
+'''
 
 ----------------------------------------------------
 
 function id_based_ring_distance(self, a, b)
+	--
 	local aux_parameters = self:get_distFunc_extraParams()
 	if a[1]==nil or b[1]==nil then
 		log:warning("DIST at node: "..job.position.." id_based_ring_distance: self either a[1]==nil or b[1]==nil")

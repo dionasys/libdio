@@ -3,50 +3,44 @@ local TMAN ={}
 TMAN.__index = TMAN
 
 function TMAN.new(me, size, cycle_period, base_procotols, active_b_proto)
-	local self = setmetatable({}, TMAN)
 	
+	local self = setmetatable({}, TMAN)
 	self.utils=Utilities.new(me)
 	self.t_view = {}  
 	self.t_last_view = {}
 	self.t_last_view_as_string = ""
 	self.view_stable_info = false
 	self.view_stable_counter = 0
-	
 	self.t_view_lock = events.lock()
 	self.ongoing_rpc = false
 	self.is_init = false
 	self.cycle_numb = 0
-	
 	self.rank_func = nil
 	self.rank_extra_params=nil
-	
 	self.rank_func_hash = nil
 	self.last1_rank_func_hash = nil
 	self.last2_rank_func_hash = nil
-	
 	self.last1_rank_extra_params = nil
 	self.last2_rank_extra_params = nil
-	
 	self.rank_func_lock = events.lock()
 	self.rank_extra_params_lock = events.lock()
-	
 	self.me=me	
 	self.s = size
 	self.cycle_period = cycle_period
 	self.algos={}
 	self.b_protocol = {}
 	self.b_active = active_b_proto
-	
 	self.coordinator=coord
- 
+
 	for i,v in pairs(base_procotols) do
 		self.b_protocol[i] = v   
 	end
+	
 	self.logDebug = false
 	self.protoName="TMAN"
-	--self.algoId = algoId
 	self.algoId = nil
-  return self
+	return self
+
 end
 ----------------------------------------------------
 function TMAN.compute_hash(o) return string.sub(crypto.evp.new("sha1"):digest(o), 1, 32) end
@@ -60,7 +54,8 @@ function TMAN.getAlgoID(self) return self.algoId end
 function TMAN.getNodeID(self) return self.me:getID() end
 function TMAN.getNode(self) return self.me end
 ----------------------------------------------------
-	function TMAN.select_peer(self, viewCopy) 
+function TMAN.select_peer(self, viewCopy) 
+		
 		local currentMethod = "[TMAN.SELECT_PEER] - "
 		local ranked_view = self.rank_view(self, viewCopy)
 		if (ranked_view and #ranked_view >0) then
@@ -68,9 +63,10 @@ function TMAN.getNode(self) return self.me end
 		else
 			return false
 		end
-	end
+end
 ----------------------------------------------------	
-	function TMAN.init(self, bootstrapNode)
+function TMAN.init(self, bootstrapNode
+	
 		local currentMethod = "[TMAN.INIT] - "
 		local active_algo_base = nil
 		for k,v in pairs(self.b_protocol) do
@@ -78,7 +74,6 @@ function TMAN.getNode(self) return self.me end
 				active_algo_base = v
 			end
 		end
-
 		local peer = nil
 		local bootView = {}
 		while #bootView < self.s do
@@ -103,20 +98,19 @@ function TMAN.getNode(self) return self.me end
 					log:warning(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." getPeer() returned node IS NULL, will try again.")
 				end
 			end
-			
 			events.sleep(3)
 		end
 		self.t_view_lock:lock()
 			self.t_view = bootView
 			self.utils:print_this_view("[TMAN.INIT_INI_FROM_PSS] - CURRENT TMAN_VIEW:", self.t_view, self.cycle_numb, self.algoId)
 		self.t_view_lock:unlock()
-
 		events.periodic(self.cycle_period, function() self.active_thread(self) end)
-	end
+
+end
 
 	
 ----------------------------------------------------
-	function TMAN.select_view_to_send(self, selected_peer, viewCopy)
+function TMAN.select_view_to_send(self, selected_peer, viewCopy)
 		
 		local currentMethod = "[TMAN.SELECT_VIEW_TO_SEND] - "
 		local active_algo = nil
@@ -133,10 +127,11 @@ function TMAN.getNode(self) return self.me end
 		self.remove_dup(self,merged)
 		self.remove_node(self,merged, selected_peer)
 		return merged	
-	end
+		
+end
 	
 ----------------------------------------------------
-	function TMAN.update_view_to_keep(self, received)
+function TMAN.update_view_to_keep(self, received)
 		
 		local currentMethod = "[TMAN.UPDATE_VIEW_TO_KEEP] - "
 		local viewCopy = self.getTViewCopy(self)
@@ -148,32 +143,11 @@ function TMAN.getNode(self) return self.me end
 		self.t_view_lock:lock()
 			self.t_view = viewCopy
 		self.t_view_lock:unlock()
-	end
+		
+end
 ----------------------------------------------------
-	function TMAN.check_view_stability(self)
+function TMAN.same_view(self, v1,v2)
 	
-		local tmp_t_view = {}
-		log:print("TMAN stable check")
-
-		if #self.t_last_view == 0 then
-			self.t_last_view = self.t_view
-		else
-			if self.same_view(self, self.t_last_view, self.t_view)==true then
-				self.view_stable_counter = self.view_stable_counter +1
-			else
-				self.t_last_view = self.t_view
-				self.view_stable_counter = 0
-				self.view_stable_info=false
-			end
-		end
-
-		if self.view_stable_counter>10 and self.view_stable_info==false then
-			log:print("TEST VIEW stable true (>10 cycles) at node: "..job.position.." id: "..self.me.id.." after "..self.cycle_numb.." cycles")
-			self.view_stable_info=true
-		end
-	end
-----------------------------------------------------
-	function TMAN.same_view(self, v1,v2)
 		if type(v1) == "table" and  type(v2) == "table" then
 			if #v1 == #v2 then
 				for i=1,#v1 do
@@ -186,11 +160,12 @@ function TMAN.getNode(self) return self.me end
 				return false
 			end
 		end	
-	end
+		
+end
 	
 ----------------------------------------------------
-	function TMAN.same_ids_view(self, v1,v2)
-		--TODO 
+function TMAN.same_ids_view(self, v1,v2)
+
 		if type(v1) ~= "table" then
 			return e1 == e2
 		elseif type(v2) == "table" then
@@ -207,9 +182,11 @@ function TMAN.getNode(self) return self.me end
 				end
 			return "true"
 		end	
-	end
+		
+end
 ----------------------------------------------------
-	function TMAN.same_id(self, n1,n2)
+function TMAN.same_id(self, n1,n2)
+	
 		local peer_first
 		if n1.peer then 
 			peer_first = n1.peer 
@@ -223,22 +200,21 @@ function TMAN.getNode(self) return self.me end
 			peer_second = n2 
 		end
 		return peer_first.id == peer_second.id 
-	end
+
+end
 	
 ----------------------------------------------------
-	function TMAN.keep_first_n(self, n, set)
+function TMAN.keep_first_n(self, n, set)
 		for i = #set, n+1, -1 do
 			table.remove(set,i)
 		end
-	end
+end
 ----------------------------------------------------
-	function TMAN.set_distance_function(self, f)
-		log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." distance Func: "..tostring(f))
+function TMAN.set_distance_function(self, f)
+	-- Note: the rationale of using a last1 and last2 is to control the dissemination of distance functions avoiding unwanted replacements 
 		self.rank_func_lock:lock()
 			if self.rank_func_hash == nil and self.last1_rank_func_hash == nil  and self.last2_rank_func_hash == nil then 
-				log:print("DEBUG DF_SET , at node: "..job.position.." id: "..self.me.id.." add new DF ")
 				local initialHash = self.compute_hash(string.dump(f))
-				log:print("DEBUG DF_SET, at node: "..job.position.." id: "..self.me.id.." received initialHash hash: "..tostring(initialHash))
 				self.rank_func = f
 				self.rank_func_hash = initialHash
 				self.last1_rank_func_hash = initialHash
@@ -246,10 +222,6 @@ function TMAN.getNode(self) return self.me end
 			else
 				local receivedFuncHash = self.compute_hash(string.dump(f))
 				if receivedFuncHash ~= self.rank_func_hash and receivedFuncHash ~= self.last1_rank_func_hash and receivedFuncHash ~= self.last2_rank_func_hash then
-					log:print("DEBUG DF_SET at node: "..job.position.." id: "..self.me.id.." changing DF ")
-					log:print("DEBUG DF_SET at node: "..job.position.." id: "..self.me.id.." current hash: "..tostring(self.rank_func_hash))
-					log:print("DEBUG DF_SET at node: "..job.position.." id: "..self.me.id.." received Func hash: "..tostring(receivedFuncHash))
-					
 					self.last2_rank_func_hash = self.last1_rank_func_hash
 					self.last2_rank_func_hash = self.rank_func_hash 
 					self.rank_func_hash = receivedFuncHash
@@ -258,21 +230,19 @@ function TMAN.getNode(self) return self.me end
 			end
 		self.rank_func_lock:unlock()
 
-	end
+end
 ----------------------------------------------------
-	function TMAN.get_distance_function(self)
+function TMAN.get_distance_function(self)
 		return self.rank_func
-	end
+end
 ----------------------------------------------------
-	function TMAN.set_distFunc_extraParams(self, args)
-		log:print("DEBUG EXTRAPAR SETTING , at node: "..job.position.." id: "..self.me.id.." EXTRAPAR : "..tostring(args))
+function TMAN.set_distFunc_extraParams(self, args)
+		
 		self.rank_extra_params_lock:lock()
 			if self.rank_extra_params == nil and self.last1_rank_extra_params == nil  and self.last2_rank_extra_params == nil then 
-				log:print("DEBUG EXTRAPAR_SET , at node: "..job.position.." id: "..self.me.id.." all nil add first EXTRAPAR ")
 				self.rank_extra_params = args
 			else
 				if not misc.equal(args, self.rank_extra_params) and not misc.equal(args, self.last1_rank_extra_params) and not misc.equal(args, self.last2_rank_extra_params) then
-					log:print("DEBUG EXTRAPAR_SET , at node: "..job.position.." id: "..self.me.id.." changing EXTRAPAR ")
 					self.last2_rank_extra_params = self.last1_rank_extra_params
 					self.last1_rank_extra_params= self.rank_extra_params 
 					self.rank_func_hash = receivedFuncHash
@@ -280,13 +250,13 @@ function TMAN.getNode(self) return self.me end
 				end
 			end
 		self.rank_extra_params_lock:unlock()
-	end
+end
 ----------------------------------------------------
-	function TMAN.get_distFunc_extraParams(self)
+function TMAN.get_distFunc_extraParams(self)
 		return self.rank_extra_params 
-	end
+end
 ----------------------------------------------------
-	function TMAN.dist_function(self, p1, p2)
+function TMAN.dist_function(self, p1, p2)
 	
 	  if self==nil then
 	    log:warning("at node: "..job.position.." id: "..self.me.id.." self dist_function nil: ")
@@ -295,9 +265,9 @@ function TMAN.getNode(self) return self.me end
 		dist = self.rank_func(self, p1, p2)
 		return dist
 		
-	end
+end
 ----------------------------------------------------
-	function TMAN.rank_view(self, viewCopy)
+function TMAN.rank_view(self, viewCopy)
 	
 		local currentMethod = "[TMAN.RANK_VIEW] - "
 		local distances = {}
@@ -316,12 +286,9 @@ function TMAN.getNode(self) return self.me end
 			local dist = self.dist_function(self, mypayload, nb_payload)
 			distances[#distances+1] = {distance= dist, node=v}
 		end
-	
 		table.sort(distances, function(a,b) return a.distance < b.distance end)
-
 		local	ret=""
 		local cumul_distance=0
-		
 		for i,v in ipairs(distances) do
 			ret = ret.." "..v.node.id.." : ["..v.distance.."] "	
 			cumul_distance = cumul_distance+v.distance
@@ -330,11 +297,10 @@ function TMAN.getNode(self) return self.me end
 			ranked[#ranked+1] = v.node
 		end
 		return ranked
-	end
-
+end
 ----------------------------------------------------
-	function TMAN.get_payload(self, node)
-	--TODO refactoring: send it to Utilities maybe
+function TMAN.get_payload(self, node)
+
 		local payl = {}
 		if type(node) == "table" then 
 			payl = node.payload 
@@ -342,19 +308,15 @@ function TMAN.getNode(self) return self.me end
 			payl = node 
 		end
 		return payl
-	end
-
+end
 ----------------------------------------------------
-	function TMAN.remove_failed_node(self, node)
-
+function TMAN.remove_failed_node(self, node)
 		self.t_view_lock:lock()
 		self.remove_node(self, self.t_view, node)
 		self.t_view_lock:unlock()
-		
-	end
+end
 ----------------------------------------------------
-	function TMAN.remove_node(self, t, node)
-
+function TMAN.remove_node(self, t, node)
 		local j = 1
 		for i = 1, #t do
 			if  t[j].id==node then
@@ -362,10 +324,9 @@ function TMAN.getNode(self) return self.me end
 			else j = j+1 
 			end
 		end
-	end
-
+end
 ----------------------------------------------------
-	function TMAN.same_node(self, n1,n2)
+function TMAN.same_node(self, n1,n2)
 		local peer_first
 		if n1.peer then 
 			peer_first = n1.peer 
@@ -379,9 +340,10 @@ function TMAN.getNode(self) return self.me end
 			peer_second = n2 
 		end
 		return peer_first.port == peer_second.port and peer_first.ip == peer_second.ip
-	end
+end
 ----------------------------------------------------
-	function TMAN.remove_dup(self, set)
+function TMAN.remove_dup(self, set)
+	
 		for i,v in ipairs(set) do
 			local j = i+1
 			while(j <= #set and #set > 0) do
@@ -391,22 +353,18 @@ function TMAN.getNode(self) return self.me end
 				end
 			end
 		end
-	end
+end
 ----------------------------------------------------
 function TMAN.getTViewCopy(self)
-	local currentMethod = "[TMAN.getTViewCopy] - "
+
 	self.t_view_lock:lock()
 		local copy = misc.dup(self.t_view)
 	self.t_view_lock:unlock()
 	return copy
 end
-
 ---------------------------------------------------- 
 function TMAN.activeTMANThreadSuccess(self, received)
-		local currentMethod = "[TMAN.ACTIVETMANTHREADSUCCESS] - "
-		if self.logDebug then
-			log:print(currentMethod.." at node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." - received buffer invoking TMAN.UPDATE_VIEW_TO_KEEP().")
-		end
+
 		if received[2] ~= nil then
 			local curFunction = assert(loadstring(received[2]))
 			self.set_distance_function(self, curFunction)
@@ -420,6 +378,7 @@ end
 	
 ---------------------------------------------------- 
 function TMAN.active_thread(self)
+	
 		local currentMethod = "[TMAN.ACTIVE_THREAD] - "
 		self.t_view_lock:lock()
 			self.cycle_numb = self.cycle_numb+1
@@ -437,7 +396,7 @@ function TMAN.active_thread(self)
 			buffer_function = {buffer, funcToSend , funcPar}
 		end
 		if buffer_function == nil  then
-			log:print(currentMethod.." node: "..job.position.." DEBUG : active thread - buffer_function is nil")
+			log:print(currentMethod.." node: "..job.position.." active thread - buffer_function is nil")
 		else 
 			Coordinator.send(self.algoId, selected_peer, buffer_function,'CompleteTMANActive', self.algoId)
 		end
@@ -449,11 +408,8 @@ end
 ----------------------------------------------------
 function TMAN.passive_thread(self, sender, received)
 	
-	local currentMethod = "[TMAN.PASSIVE_THREAD] - "
-	
 	events.thread(function()
 		local currentMethod = "[TMAN.PASSIVE_THREAD] - "
-		log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." sender: "..sender.id)
 		local viewCopy = self.getTViewCopy(self)
 		local buffer_to_send = self.select_view_to_send(self, sender, viewCopy)
 		local adapt_buffer_function_to_send = {}
@@ -467,7 +423,7 @@ function TMAN.passive_thread(self, sender, received)
 		local funcToSend = string.dump(self.get_distance_function(self))
 		local funcPar =  self.get_distFunc_extraParams(self)
 		if funcToSend == nil or funcPar == nil then
-			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - funcToSend or funcPar are nil")
+			log:print(currentMethod.." node: "..job.position.." passive thread - funcToSend or funcPar are nil")
 		else 
 			adapt_buffer_function_to_send = {buffer_to_send, funcToSend , funcPar}
 			Coordinator.callAlgoMethod(self.algoId, 'activeTMANThreadSuccess', adapt_buffer_function_to_send, sender, self.me.id)
@@ -475,21 +431,17 @@ function TMAN.passive_thread(self, sender, received)
 	end)
 
 	self.update_view_to_keep(self, received[1])
-		end
+end
 ----------------------------------------------------
-	function TMAN.set_node_representation(self, node_rep)
-	
+function TMAN.set_node_representation(self, node_rep)
 		self.me.payload= node_rep
 		local pl_string = ""
 		for i=1, #self.me.payload do
 			pl_string = pl_string.." "..node_rep[i]
 		end
-		if self.logDebug then
-			log:print("TMAN - At node: node: "..job.position.." id: "..self.me.id.." cycle: "..self.cycle_numb.." setting node representation (payload): [ "..pl_string.." ]")
-		 end
-	end
+end
 ----------------------------------------------------
-	function TMAN.removeDead(received)
+function TMAN.removeDead(received)
 			local ret = {}
 			for k,v in ipairs(received) do
 						local latency = rpc.ping(v.peer, 2)
@@ -500,78 +452,51 @@ function TMAN.passive_thread(self, sender, received)
 					end
 			end
 			return ret
-		end
-
+end
 		----------------------------------------------------
-	function TMAN.floodForwardDistFunc(self, forwardingPayload)
-	
-			local currentMethod = "[TMAN.FLOODfORWARDdISTfUNC] - "
-			log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.." DEBUG floodForwardDistFunc started ")
+function TMAN.floodForwardDistFunc(self, forwardingPayload)
+
 			local dst = nil 
 			disseminationPayload = { forwardingPayload[1], forwardingPayload[2] , (forwardingPayload[3])-1}
 			local viewCopy = self.getTViewCopy(self)
 			for k,v in ipairs(viewCopy) do
-					log:print(currentMethod.." node: "..job.position.." DEBUG :  forwarding flood to "..v.id.." with ttl: "..(forwardingPayload[3])-1)
-					log:print(currentMethod.." node: "..job.position.." DEBUG :  invoking Coordinator.callAlgoMethod at node "..v.id)
 					dst = {ip=v.peer.ip, port=v.peer.port, id=v.id}
 					Coordinator.callAlgoMethod(self.algoId, 'handleDistFuncFlood', disseminationPayload, dst , self.me.id)
 			end
-	
-	end
+end
 	
 ----------------------------------------------------
-	function TMAN.handleDistFuncFlood(self, receivedPayload)
-		
-		local currentMethod = "[TMAN.HANDLEDISTFUNCFLOOD] - "
-		log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.." DEBUG handleDistFuncFlood started ")
-		
+function TMAN.handleDistFuncFlood(self, receivedPayload)
+
 		if receivedPayload[1] ~= nil then
-			log:print(currentMethod.." node: "..job.position.." DEBUG : handleDistFuncFlood - receivedPayload[1]: "..tostring(receivedPayload[1]))
 			local receivedFunction = assert(loadstring(receivedPayload[1]))
 			self.set_distance_function(self, receivedFunction)
-		else
-			log:print(currentMethod.." node: "..job.position.." DEBUG : handleDistFuncFlood -receivedPayload[1] is nil")
 		end
-		
 		if receivedPayload[2] ~= nil then
-			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - receivedPayload[2]: "..tostring(receivedPayload[2]))
 			self.set_distFunc_extraParams(self, receivedPayload[2])
-		else
-			log:print(currentMethod.." node: "..job.position.." DEBUG : passive thread - receivedPayload[2] is nil ")
 		end
-		
 		if receivedPayload[3] ~= nil and receivedPayload[3] > 0 then
-			log:print(currentMethod.." node: "..job.position.." DEBUG :  ttl is  "..receivedPayload[3])
 			self.floodForwardDistFunc(self, receivedPayload)
-		else
-			log:print(currentMethod.." node: "..job.position.." DEBUG :  ttl is  "..receivedPayload[3].." stopping forwarding")
 		end
-	
-	end
+
+end
 	----------------------------------------------------
-	function TMAN.floodDistFunc(self, distFunc, extraParam, ttl)
+function TMAN.floodDistFunc(self, distFunc, extraParam, ttl)
 	
 		local currentMethod = "[TMAN.FLOODDISTFUNC] - "
-		log:print(currentMethod.." node: "..job.position.." id: "..self.me.id.."  DEBUG : floodDistFunc started ")
-		
 		local dst = nil 
 		local funcToDissem = string.dump(distFunc)
 		local disseminationPayload = {}
 		if distFunc == nil or extraParam == nil then
-			log:print(currentMethod.." node: "..job.position.." DEBUG : floodDistFunc - currentFunc or funcExtraParameters are nil")
+			log:print(currentMethod.." node: "..job.position.." floodDistFunc - currentFunc or funcExtraParameters are nil")
 		else 
-			log:print(currentMethod.." node: "..job.position.." DEBUG : floodDistFunc - currentFunc or funcExtraParameters NOT nil")
 			disseminationPayload = {funcToDissem, extraParam , ttl}
 			local viewCopy = self.getTViewCopy(self)
 			for k,v in ipairs(viewCopy) do
-				log:print(currentMethod.." node: "..job.position.." DEBUG : invoking Coordinator.callAlgoMethod at node "..v.id)
 				dst = {ip=v.peer.ip, port=v.peer.port, id=v.id}
 				Coordinator.callAlgoMethod(self.algoId, 'handleDistFuncFlood', disseminationPayload, dst , self.me.id)
 			end
 		end
-	end
-	
-
-
+end
 ------------------------ END OF CLASS TMAN ----------------------------
 

@@ -1,7 +1,6 @@
--- #################### CLASS COORDINATOR ###################################
+-- #################### COORDINATOR ###################################
 Coordinator={}
 Coordinator.algos={}
-
 Coordinator.senderBuffer={} 
 Coordinator.piggybackMsg=false
 Coordinator.senderPeriod=7
@@ -64,7 +63,6 @@ Coordinator.passive_thread = function(algoId, from, buffer)
 			local algoId = value[2]
 			local sender = value[3]
 			local buffer = value[4]
-			
 			local algo = nil
 			for k,v in pairs(Coordinator.algos) do 
 				if v.id==algoId then
@@ -78,7 +76,6 @@ Coordinator.passive_thread = function(algoId, from, buffer)
 			end
 		end
 	else
-
 		local algo = nil
 		for k,v in pairs(Coordinator.algos) do 
 			if v.id==algoId then
@@ -93,10 +90,10 @@ Coordinator.passive_thread = function(algoId, from, buffer)
 		end
 	end
 			
-
 end
 
 Coordinator.sender = function()
+	
 		Coordinator.sender_msgs_lock:lock()
 			if #Coordinator.senderBuffer > 0 then
 				for k,v in pairs(Coordinator.senderBuffer) do 
@@ -113,11 +110,11 @@ Coordinator.sender = function()
 			else
 			end
 		Coordinator.sender_msgs_lock:unlock()
-
 		
 end
 
 Coordinator.ship = function(sender, v, timeout, allEventsToFire)
+
 		local ok = rpc.acall(v.dest[1].peer,{"Coordinator.passive_thread", "msgs",   sender, v.msgs}, timeOut)
 		if not ok then
 			Coordinator.totalFailedMsgs=Coordinator.totalFailedMsgs+1
@@ -127,6 +124,7 @@ Coordinator.ship = function(sender, v, timeout, allEventsToFire)
 		else
 			Coordinator.totalOkMsgs=Coordinator.totalOkMsgs+1
 		end
+		
 end
 
 Coordinator.send = function(algoId, dst, buf, eventToFire, invokingProtocolID)
@@ -179,6 +177,7 @@ Coordinator.send = function(algoId, dst, buf, eventToFire, invokingProtocolID)
 end
 
 Coordinator.printSenderBuffer = function()
+	
 	log:print(" DEBUG - [Coordinator.PRINTSENDERBUFFER] - at node: "..job.position.." printing invoked ")
 	if #Coordinator.senderBuffer > 0 then
 		log:print(" DEBUG - [Coordinator.PRINTSENDERBUFFER] - at node: "..job.position.." destinations at SENDERS_BUFFER: "..tostring(#Coordinator.senderBuffer) )
@@ -190,11 +189,10 @@ Coordinator.printSenderBuffer = function()
 	else
 		log:print(" DEBUG - [Coordinator.PRINTSENDERBUFFER] - at node: "..job.position.." #Coordinator.senderBuffer= "..tostring(#Coordinator.senderBuffer) )
 	end
-	
 end
 
 Coordinator.callAlgoMethod = function(algoId, method, payload, dst, srcId)
--- TODO: possible change in the callback if changes in the send for piggybacked msgs show satisfying results. note: piggybacked msgs didnt show any improvement in the tests. 
+
 	log:print("[Coordinator.CALLALGOMETHOD] - COORDINATOR at node: "..job.position.." callAlgoMethod invoked from node: "..srcId.." for method: "..method.." of protocol: "..algoId.." at node: "..dst.id)
 	local ok = rpc.acall(dst, {"Coordinator.dispatch", algoId, method, payload, srcId}, 3)
 	if not ok then 
@@ -204,6 +202,7 @@ Coordinator.callAlgoMethod = function(algoId, method, payload, dst, srcId)
 end
 
 Coordinator.dispatch = function(algoId, method, payload, srcId)
+	
 	log:print("[Coordinator.DISPATCH] - COORDINATOR at node: "..job.position.." request from node: "..srcId.." for method: "..method.." of protocol: "..algoId)
 	local algo = nil
 	for k,v in pairs(Coordinator.algos) do 
@@ -216,6 +215,7 @@ Coordinator.dispatch = function(algoId, method, payload, srcId)
 	else 
 		log:warning("[Coordinator.DISPATCH] - COORDINATOR at node: "..job.position.." No instance of algorithm "..algoId.." found") 
 	end
+	
 end
 
 Coordinator.replaceDistFunctionAtLayer = function(algoId, newDistFunction, newExtraParameters)
@@ -231,7 +231,6 @@ Coordinator.replaceDistFunctionAtLayer = function(algoId, newDistFunction, newEx
 	
 	if algo then 
 		log:print("DEBUG : [Coordinator.REPLACEDISTFUNCTIONATLAYER] at node: "..job.position.." protocol: "..algoId.." not nil:  invoking set_distance_function , set_distFunc_extraParams and floodDistFunc ")
-		
 		algo['set_distance_function'](algo, newDistFunction)
 		algo['set_distFunc_extraParams'](algo, newExtraParameters)
 		algo['floodDistFunc'](algo, newDistFunction, newExtraParameters, Coordinator.disseminationTTL)
@@ -251,7 +250,6 @@ Coordinator.setProtoDistFunction = function(algoId, newDistFunction, newExtraPar
 			algo = v.obj
 		end
 	end
-	
 	if algo then 
 		log:print("DEBUG : [Coordinator.SETPROTODISTFUNCTION] at node: "..job.position.." protocol: "..algoId.." not nil:  invoking set_distance_function and set_distFunc_extraParams.")
 		algo['set_distance_function'](algo, newDistFunction)
@@ -259,10 +257,12 @@ Coordinator.setProtoDistFunction = function(algoId, newDistFunction, newExtraPar
 	else 
 		log:warning("DEBUG : [Coordinator.SETPROTODISTFUNCTION] - COORDINATOR at node: "..job.position.." No instance of algorithm "..algoId.." found") 
 	end
+	
 end
 
 
 Coordinator.bootstrap = function(node)
+	
 	if job.position ~= #job.get_live_nodes() then
 		local peer = job.get_live_nodes()[job.position + 1]
 		local nodeBS = Node.new({ip=peer.ip, port=peer.port})
@@ -273,12 +273,6 @@ Coordinator.bootstrap = function(node)
 			log:print("Coordinator.bootstrap retuning nil: ")
 			return nil 
 	end
-
+	
 end
-
-
-
-
-
-
 ------------------------ END OF CLASS COORDINATOR --------------------------

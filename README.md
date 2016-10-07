@@ -22,7 +22,7 @@ libdio is a library used to coordinate the construction of distributed overlays 
 
 
 
-# How to use it (by examples):
+# How to use libdio (by examples):
 
 Currently, there are current few examples available in the source code showing how to use libdio in order to build overlay topologies. 
 

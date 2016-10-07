@@ -3,6 +3,7 @@ local Node = {}
 Node.__index = Node 
 
 function Node.new(me)
+	
 	local self = setmetatable({}, Node)
 	self.peer=me
 	self.id=job.position
@@ -16,21 +17,8 @@ function Node.new(me)
 	self.computeID_func=nil
 	self.computeID_func_params={}
   return self
+	
 end
-
-----------------------------------------------------
-	function Node.set_computeID_function(self, f)
-		self.computeID_func = f
-	end
-----------------------------------------------------
-	function Node.get_computeID_function(self)
-		return self.computeID_func
-	end
-----------------------------------------------------
-	function Node.set_computeID_function(self, f, args)
-		self.computeID_func = f
-		self.computeID_func_params = args
-	end
 
 	----------------------------------------------------
 	function Node.computeID_function(self, ip , port)
@@ -90,17 +78,13 @@ function Node.set_IDSpace(self, bits)
 		else
 			r= bits/4 + 1
 		end
-		log:print("[set_IDSpace] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  selected number of bits: "..bits.." hexa need to represent it: "..r)
 		local resultHexa = string.sub(crypto.evp.new("sha1"):digest(tostring(job.me.ip)..":"..tostring(job.me.port)), 1, r)
-		log:print("[set_IDSpace] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  hashed(ip port) resultHexa: "..resultHexa)
 		local resultNumb = tonumber(resultHexa,16)
-		log:print("[set_IDSpace] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  resultHexa to number: "..resultNumb)
 		self.id = resultNumb
 end
 
 
 function Node.compute_ID(self, bits, ip , port)
-			log:print("[compute_ID] IDSPACE - At node: "..job.position.." id: "..self.id.." computing hash id to IP: "..ip.." PORT: "..port)
 			local r = 0
 			if bits%4 == 0 then
 				r = bits/4
@@ -108,9 +92,7 @@ function Node.compute_ID(self, bits, ip , port)
 				r= bits/4 + 1
 			end
 			local resultHexa = string.sub(crypto.evp.new("sha1"):digest(tostring(ip)..":"..tostring(port)), 1, r)
-			log:print("[compute_ID] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  hashed(ip port) resultHexa: "..resultHexa)
 			local resultNumb = tonumber(resultHexa,16)
-			log:print("[compute_ID] IDSPACE - At node: "..job.position.." id: "..self.id.." setting ID,  resultHexa to number: - returning: "..resultNumb)
 			return resultNumb
 end
 
@@ -157,14 +139,9 @@ end
 
 function Node.setPayload(self, payload)
 	self.payload= payload
-
 	local pl_string = ""
-	
 	for i=1, #self.payload do
 		pl_string = pl_string.." "..self.payload[i]
-	end
-	if self.logDebug then
-		log:print("NODE - At node: "..job.position.." id: "..self.id.." setting node representation (payload): [ "..pl_string.." ]")
 	end
 end
 
@@ -175,5 +152,19 @@ end
 function Node.getPayloadSize(self)
 	return #self.payload
 end
+
+----------------------------------------------------
+	function Node.set_computeID_function(self, f)
+		self.computeID_func = f
+	end
+----------------------------------------------------
+	function Node.get_computeID_function(self)
+		return self.computeID_func
+	end
+----------------------------------------------------
+	function Node.set_computeID_function(self, f, args)
+		self.computeID_func = f
+		self.computeID_func_params = args
+	end
 ------------------------ END OF CLASS NODES --------------------------
 
