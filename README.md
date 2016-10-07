@@ -1,23 +1,62 @@
 # libdio: easily building self-organized overlays
 
-libdio is a library used to coordinate the construction of distributed overlays on SPLAY. This work is developed as a part of DIONASYS project. 
+Traditional mathods of building overlays topologies require nodes need to navigate in an existing structure in order to find their exact position. Explicitly creating and maintaining these structures in dynamic environments are clearly complex and error-prone tasks. An alternative to this approach is to profit from the self-organizing properties of gossip-based protocols to build overlay topologies. We are interested in the practical aspects of constructing overlay topologies at large scale,  which includes easing the construction and maintenance of such structures. 
+
+To this end, we present libdio. 
+
+libdio is a library used to coordinate the construction of distributed overlay topologies. 
+lidbio has a very simple API based on node affinity declarations, that can automatically emerge and maintain the requested overlay structure.
+
+The core of our solution relies on the idea of keeping apart the declaration of the structure and the process that builds it. Our main objective is to ease the process of creating, deploying and monitoring these overlays. libdio offers support in four axes: i) **programmability** by making it easy to program overlays, ii) **runtime support** by handling all the low-level details required to build and deploy overlays, iii) **overlay composition**: by offering a simple mechanism that allows the programmer to attach and detach different protocols as a stack of overlays, iv) **overlay adaptation**: by offering mechanisms that allow the programmer to adapt the protocols and topologies at runtime   
+
+libdio is built upon SPLAY framework and this work was developed as a part of DIONASYS project. 
+
+
+
+
+# The architecture
+
+Here we have a representation of the main blocks of the library.
+![Architecture in blocks - picture](docs/img/lib_architeture.png?raw=true "libio_blocks")
 
 
 # The API:
 
-* **PSS.new(view_size, healing, swappig, fanout, cycle_period, peer_selection_policy, local_node)**: Instantiates an object of a peer sampling protocol (PSS).
+In the following we describe the main methods exposed by the API. Please note that this list is not extensive and other auxiliary methods and function can be found in the code.
 
-* **TMAN.new(local_node, view size, cycle_period, base_procotols, active_base_protocol, algoId)**: Instantiates an object of a TMAN protocol (TMAN).
+* **Node.new(job.me)**: Instantiates a new Node object. This is the node running the application. The parameter *job.me* is the table identifying a node in SPLAY framework.
 
-* **TMAN:set_distance_function(functionName)**: sets the distance function used to rank nodes and create the target structure. The parameter *functionName* is the name of the function defined and implemented by the user.
 
-* **TMAN:set_payload(pl)**: sets the node semantic. This can be seen as node's profile, which is used to calculate the distance between nodes. For instance, in Chord overlay this is the node id. In a topic-based clustering overlay it is the set of topics a node is interested in. 
+* **PSS.new(view_size, healing, swappig, fanout, cycle_period, peer_selection_policy, local_node)**: Instantiates an object of a peer sampling protocol (PSS). The description of each parameter is the following: *view_size*: size of the local view, *healing*: PSS paramenter H, *swappig*: PSS parameter S, *fanout*: PSS fanout parameter, *cycle_period*: defines the gossip cycle, *peer_selection_policy*: PSS parameter, can be "head, "tail" or "rand", *local_node*: reference to the instance of the Node object.
+
+
+* **TMAN.new(local_node, view size, cycle_period, base_procotols, active_base_protocol, algoId)**: Instantiates an object of a TMAN protocol (TMAN). The description of the parameters are the following, for those not mention they follow the same description used to PSS.  *base_procotols*: a table containing the underlying protocols for each stacked TMAN layer, *active_base_protocol*: defines which base protocol is currently active, *algoId*: identifier string of the current TMAN layer. 
+
 
 * **Coordinator.addProtocol(algoId, prot_obj)**: adds the protocols to the coordinator runtime. The argument *algoId* is a string representing the current instance, for instance 'proto1'. *prot_obj* is the protocol object. 
+*
+
+* **Coordinator.setProtoDistFunction(proto_id, ifunctionName, extra_parameters_table)**: sets the distance function used to rank nodes and create the target structure in a given stack layer. The parameter *proto_id* is the string identifier of a specific TMAN layer you want to set the function. Parameter *functionName* is the name of the function defined and implemented by the user. The parameter *extra_parameters_table* is a table containing extra parameters and settings for the distance function to be calculated. 
+
+
+* **Node:setPayload(represent_table)**: sets the node semantic. This can be seen as node's profile, which is used to calculate the distance between nodes. The parameter *represent_table* is the table carrying the representation information.  For instance, in Chord overlay this table carries the node id, in a topic-based clustering overlay it is a vector representing the set of topics a node is interested in. 
+
+
+* **Coordinator.launch(node, running_time, delay_protos)**: starts the protocols set to run at the local node. The parameter *node* is instance of the Node object, *running_time* is the parameter that defines how long (in seconds) the application will run in the SPLAY framework and *delay_protos* defines the delay (if any is required) used by the coordinator before starting each protocol. 
+
+
+* **Coordinator:getView(proto_id)**: method that exposes the state (i.e., the views) of each node to the application. It returns the current view of a TMAN instance idetified by the parameter *proto_id*.
+
+
+* **Coordinator.replaceDistFunctionAtLayer(proto_id, ifunctionName, extra_parameters_table) **: replaces the current distance function used at a specific layer defined by the parameter *proto_id*. The definition of these paramenters are the same used by the *setProtoDistFunction* method. Used to adapt the structures on-the-fly.
+
+
+* **Coordinator.setDisseminationTTL(ttl)**: sets the chosen ttl used during the dissemination of a new distance function. This is only need if we want to change the distance function on the fly. The *ttl* parameter is used to make the dissemination faster. 
+
 
 * **Coordinator.showProtocols()**: shows the current added and running protocols. 
 
-* **Coordinator:getView(prot_id)**: method that exposes the state (view, connections) to the application. It returns the current view of a TMAN instance.
+
 
 
 
@@ -26,7 +65,7 @@ libdio is a library used to coordinate the construction of distributed overlays 
 
 Currently, there are current few examples available in the source code showing how to use libdio in order to build overlay topologies. 
 
-Lets check some of these examples : 
+Lets check how we can deploy and adapt different structures and protocols by using some of these examples. Check more in the folder *examples*.
 
 * myPSSExample.lua: this example show how to run a Peer Sampling Service (PSS) using libdio. As we can see in this example, we start by instantiating a node, 
 
@@ -69,24 +108,20 @@ Besides the intantiation of PSS and TMAN there are other fundamental and importa
 -- myExample1.lua: 
 
 function id_based_ring_cw_distance(self, a, b)
-	
 	-- clockwise distance function
 	
 	local aux_parameters = self:get_distFunc_extraParams()
 	if a[1]==nil
 		return 2^aux_parameters[1]-1
-	end
-			
+	end		
 	local k1 = a[1]
 	local k2 = b[1]
 	local distance = 0
-
 	if k1 < k2 then 
 		distance =  k2 - k1 
 	else 
 		distance =  2^aux_parameters[1] - k1 + k2 
 	end
-	
 	return distance
 end 
 
@@ -132,19 +167,16 @@ events.loop()
 ```
 -- myExample3.lua:
 
-
 function id_based_ring_cw_distance(self, a, b)
+	-- clockwise distance function
 
 	local aux_parameters = self:get_distFunc_extraParams()
-
 	if a[1]==nil or b[1]==nil then
 		return 2^aux_parameters[1]-1
-	end
-			
+	end	
 	local k1 = a[1]
 	local k2 = b[1]
 	local distance = 0
-
 	if k1 < k2 then 
 		distance =  k2 - k1 
 	else 
@@ -154,19 +186,16 @@ function id_based_ring_cw_distance(self, a, b)
 
 end
 
-
 function id_based_ring_ccw_distance(self, a, b)
+	-- counter-clockwise distance function
 
 	local aux_parameters = self:get_distFunc_extraParams()
-
 	if a[1]==nil or b[1]==nil then
 		return 2^aux_parameters[1]-1
 	end
-
 	local k1 = a[1]
 	local k2 = b[1]
 	local distance = 0
-
 	if k1 > k2 then 
 		distance =  k1 - k2
 	else 
@@ -210,20 +239,15 @@ function main()
 	--launching protocols
 	Coordinator.showProtocols()
 	Coordinator.launch(node, 320, 0)
-
 end
 
 events.thread(main)
 events.loop()
-
 ```
 
-* myExample4.lua: is similar to myExample3.lua. However, in this case the distance function is changed on-the-fly in order to check how the system can be adapted from one structure to another. When the function is changed, a new structure arises.   
-
+* myExample4.lua: is similar to myExample3.lua. However, in this case the distance function is changed on-the-fly. The system will adapt itself into a completely new structure.
 ```
 -- myExample4: 
-
-
 
 function id_based_ring_cw_distance(self, a, b)
 
@@ -231,11 +255,9 @@ function id_based_ring_cw_distance(self, a, b)
 	if a[1]==nil or b[1]==nil then
 		return 2^aux_parameters[1]-1
 	end
-
 	local k1 = a[1]
 	local k2 = b[1]
 	local distance = 0
-
 	if k1 < k2 then 
 		distance =  k2 - k1 
 	else 
@@ -244,47 +266,38 @@ function id_based_ring_cw_distance(self, a, b)
 	return distance
 end
 
-
 function id_based_ring_ccw_distance(self, a, b)
 
 	local aux_parameters = self:get_distFunc_extraParams()
-
 	if a[1]==nil or b[1]==nil then
 		return 2^aux_parameters[1]-1
 	end
-
 	local k1 = a[1]
 	local k2 = b[1]
 	local distance = 0
-
 	if k1 > k2 then 
 		distance =  k1 - k2
 	else 
-		 distance =  2^aux_parameters[1] - k2 - k1 
+		distance =  2^aux_parameters[1] - k2 - k1 
 	end
-	--distance = (2^aux_parameters[1] + k1 - k2 ) % 2^aux_parameters[1]
 	return distance
 end
 
 function main()
 	
 	local node = Node.new(job.me) 
-	log:print("APP START - node: "..job.position.." id: "..node:getID().." ip/port: ["..node:getIP()..":"..node:getPort().."]")
 
 -- setting PSS:
 	local pss = PSS.new(8, 1, 1, 4, 5, "tail", node)
 	Coordinator.addProtocol("pss1", pss)
-
--- setting TMAN 1: 
+	
+-- setting TMAN: 
 	local tman_base_protocols={pss}
 	local tman1 = TMAN.new(node, 4, 5, tman_base_protocols, "pss1")
 	Coordinator.addProtocol("tman1", tman1)
 	
-	local extraParameters = {8} -- number of bits that defines the size of the ring
-	
-	log:print("APP at node: "..job.position.." id: "..node:getID().." Coordinator setting distance function and extra parameters")
-	Coordinator.setProtoDistFunction("tman1", id_based_ring_cw_distance, extraParameters)
-
+	local extraPar = {8} -- number of bits that defines the size of the ring
+	Coordinator.setProtoDistFunction("tman1", id_based_ring_cw_distance, extraPar)
 	local rep={}
 	rep[1] = node:getID()
 	node:setPayload(rep)
@@ -292,15 +305,14 @@ function main()
 --launching protocols
 	Coordinator.showProtocols()
 	Coordinator.setDisseminationTTL(8)
-	Coordinator.launch(node, 420, 0)  --parameters: local node ref, running time in seconds, delay to start each protocol
-	
+	Coordinator.launch(node, 420, 0) 
+		
 --event to change the distance function after a time: 
 	if job.position == 1 then 
-		log:print("DEBUG DF_SET at node "..job.position.." id: "..node:getID().." scheduling thread for changing the distance function")
 		events.thread(function() 
 		events.sleep(120) 
-		log:print("DEBUG DF_SET at node "..job.position.." changing function to ccw!")
-		Coordinator.replaceDistFunctionAtLayer("tman1", id_based_ring_ccw_distance, extraParameters) 
+		log:print("at node "..job.position.." changing function to ccw!")
+		Coordinator.replaceDistFunctionAtLayer("tman1", id_based_ring_ccw_distance, extraPar) 
 		end)
 	end
 
