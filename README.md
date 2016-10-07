@@ -248,11 +248,11 @@ events.loop()
 ```
 
 * myExample4.lua: is similar to myExample3.lua. However, in this case the distance function is changed on-the-fly. The system will adapt itself into a completely new structure.
+
 ```
 -- myExample4: 
 
 function id_based_ring_cw_distance(self, a, b)
-
 	local aux_parameters = self:get_distFunc_extraParams()
 	if a[1]==nil or b[1]==nil then
 		return 2^aux_parameters[1]-1
@@ -290,10 +290,12 @@ function main()
 	local node = Node.new(job.me) 
 
 -- setting PSS:
+
 	local pss = PSS.new(8, 1, 1, 4, 5, "tail", node)
 	Coordinator.addProtocol("pss1", pss)
 	
 -- setting TMAN: 
+
 	local tman_base_protocols={pss}
 	local tman1 = TMAN.new(node, 4, 5, tman_base_protocols, "pss1")
 	Coordinator.addProtocol("tman1", tman1)
@@ -304,12 +306,14 @@ function main()
 	rep[1] = node:getID()
 	node:setPayload(rep)
 
---launching protocols
+--launching protocols:
+
 	Coordinator.showProtocols()
 	Coordinator.setDisseminationTTL(8)
 	Coordinator.launch(node, 420, 0) 
 		
 --event to change the distance function after a time: 
+
 	if job.position == 1 then 
 		events.thread(function() 
 		events.sleep(120) 
@@ -317,17 +321,35 @@ function main()
 		Coordinator.replaceDistFunctionAtLayer("tman1", id_based_ring_ccw_distance, extraPar) 
 		end)
 	end
-
+	
 end
-
 events.thread(main)
 events.loop()
 
 ```
 
+#Handling outputs
+
+The script folder has a list of scripts that can be use to grab de raw output of all examples presented above. These scripts are simple bash commands (e.g., *grep* and *awk* ) that allows to capture the views of the nodes at any time. As mentioned before, the state of any protocol can be capture by the application by using the Coordinator:getView() method provided by the APi. See the folder scripts to check a list of scripts provided with the library. 
+
+#Some results and evaluations
+
+##Behavior under churn
+This picture shows how a system deployed with libdio behaves under churn. This plot is made with the code deployed with *example3.lua*. The plot shows how the system converges to the expected structure and how it behaves during and after the churn. The blue and red lines represent the system without churn, while lines green and yellow represent the system with churn. Between 60 seconds and 180 seconds we can clearly see the impact of the churn on the convergence. We can also see that as soon as the churn stops, the system recovers and reconverge to the target state again.
+![libdio_convergence - picture](docs/img/behavior_under_churn.png?raw=true "libio_converge")
+
+
+##System adaptation
+Another insteresting point see is the adaptation on-the-fly. This picture shows how the convergence of the target structure behaves when we change the distance function on-the-fly. The system which initially converged using a initial distance function, has this function replaced to another one at the second 120. At this point the red line shows the degradation of the system and the convergence of the new structure is shown by the green line. We see that as soon as all the nodes in the system get the new function through the dissemination protocol the new structure converges to 100% of the new expected structure. 
+![libdio_convergence - picture](docs/img/function_adaptation_353.png?raw=true "libio_converge")
+
+By the previous picture, we see that the convergence of the new structure depends on how fast the new function is disseminated. The following picture shows how we can improve this dissemination by introducing a speeding up mechanism that triggers a controlled flood to improve the time need to disseminate the new function. 
+![libdio adaptation - picture](docs/img/function_adaptation_128n.png?raw=true "libio_adaptation128")
+
+
 
 # Versions:
-v 0.1
+v 0.2
 
 # Note:
-This documentation is under construction.
+This documentation is evolving. New updates must often appear.
