@@ -1,5 +1,6 @@
 set term postscript color eps enhanced 22
-set output "ring_convergence_2_instances_cw_ccw_churn_nochurn_256_nodes_jobs_254-256.eps"
+#set output "ring_convergence_2_instances_cw_ccw_churn_nochurn_256_nodes_jobs_254-256.eps"
+set output "behavior_under_churn.eps"
 load "styles.inc"
 
 set style line 1 lt 1 lc rgb "#FF0000" lw 4 # red
@@ -29,8 +30,9 @@ set arrow from 60,80 to 180,80 linestyle 304 back heads
 set label "churn period" left at 102,85 front font ",16" 
 
 
-set key right bottom
+#set key right bottom
+set key samplen 2 font ",16" right bottom  
 
 
-plot '../data/256/tman1_view_convergence_job_256.dat' using 1:4 with lines linestyle 4 t 'cw - churn' , '../data/256/tman2_view_convergence_job_256.dat' u 1:4 with lines linestyle 2 t 'ccw - churn' , '../data/254/tman1_view_convergence_job_254.dat' using 1:4 with lines linestyle 3 t 'cw - no churn' , '../data/254/tman2_view_convergence_job_254.dat' u 1:4 with lines linestyle 1 t 'ccw - no churn' 
+plot '../data/256/tman1_view_convergence_job_256.dat' using 1:4 with lines linestyle 4 t 'function cw - with churn' , '../data/256/tman2_view_convergence_job_256.dat' u 1:4 with lines linestyle 2 t 'function ccw - with churn' , '../data/254/tman1_view_convergence_job_254.dat' using 1:4 with lines linestyle 3 t 'function cw - without churn' , '../data/254/tman2_view_convergence_job_254.dat' u 1:4 with lines linestyle 1 t 'function ccw - without churn' 
 
